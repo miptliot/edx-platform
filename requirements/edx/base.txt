@@ -163,9 +163,5 @@ jsonfield==1.0.3
 # Inlines CSS styles into HTML for email notifications.
 pynliner==0.5.2
 
-# SNI support (python-2.7.3 lacks one)
-pyOpenSSL==0.15.1
-ndg-httpsclient==0.4.0
-
 # Collect exceptions
 raven==5.12.0
