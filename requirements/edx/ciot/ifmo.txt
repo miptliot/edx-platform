@@ -1,0 +1,3 @@
+-e git+https://de.ifmo.ru/scm/git/ifmo-edx-celery-grader@v4.0#egg=ifmo-edx-celery-grader==4.0
+-e git+https://de.ifmo.ru/scm/git/ifmo-xblock-htmlacademy@v4.0-npoed#egg=ifmo-xblock-htmlacademy==4.0
+-e git+https://de.ifmo.ru/scm/git/ifmo-xblock-ant@v4.0-npoed#egg=ifmo-xblock-ant==4.0

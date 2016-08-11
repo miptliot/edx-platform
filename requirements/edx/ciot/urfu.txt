@@ -1,0 +1,1 @@
+-e git+https://github.com/MasterGowen/MultiEngineXBlock.git#egg=multiengine-xblock

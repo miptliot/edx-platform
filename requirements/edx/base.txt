@@ -162,6 +162,3 @@ jsonfield==1.0.3
 
 # Inlines CSS styles into HTML for email notifications.
 pynliner==0.5.2
-
-# Collect exceptions
-raven==5.12.0

@@ -95,25 +95,8 @@ git+https://github.com/edx/xblock-utils.git@v1.0.2#egg=xblock-utils==1.0.2
 -e git+https://github.com/edx/edx-user-state-client.git@30c0ad4b9f57f8d48d6943eb585ec8a9205f4469#egg=edx-user-state-client
 git+https://github.com/edx/edx-organizations.git@release-2015-12-08#egg=edx-organizations==0.2.0
 # git+https://github.com/edx/edx-proctoring.git@0.11.6#egg=edx-proctoring==0.11.6
--e git+https://github.com/miptliot/edx-proctoring.git@master#egg=edx_proctoring
 git+https://github.com/edx/xblock-lti-consumer.git@v1.0.0#egg=xblock-lti-consumer==v1.0.0
-
--e git+https://github.com/raccoongang/examus_edx_backend.git@master#egg=examus_edx_backend
--e git+https://github.com/raccoongang/itmo_edx_backend.git@master#egg=itmo_edx_backend
--e git+https://github.com/raccoongang/edx_proctor_webassistant_backend.git@master#egg=edx_proctor_webassistant_backend
 
 # Third Party XBlocks
 -e git+https://github.com/mitodl/edx-sga@172a90fd2738f8142c10478356b2d9ed3e55334a#egg=edx-sga
 -e git+https://github.com/open-craft/xblock-poll@e7a6c95c300e95c51e42bfd1eba70489c05a6527#egg=xblock-poll
-
- # Npoed specific repos:
--e git+https://github.com/miptliot/open_edx_api_extension.git@dogwood#egg=open_edx_api_extension
--e git+https://github.com/miptliot/npoed-sso-edx-client.git@dogwood#egg=sso_edx_npoed
-
-# IFMO HTMLAcademy, Ant
--e git+https://de.ifmo.ru/scm/git/ifmo-edx-celery-grader@v4.0#egg=ifmo-edx-celery-grader==4.0
--e git+https://de.ifmo.ru/scm/git/ifmo-xblock-htmlacademy@v4.0-npoed#egg=ifmo-xblock-htmlacademy==4.0
--e git+https://de.ifmo.ru/scm/git/ifmo-xblock-ant@v4.0-npoed#egg=ifmo-xblock-ant==4.0
-
-# URFU MultiEngine
--e git+https://github.com/MasterGowen/MultiEngineXBlock.git#egg=multiengine-xblock

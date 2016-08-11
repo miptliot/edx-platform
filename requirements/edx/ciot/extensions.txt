@@ -1,0 +1,2 @@
+-e git+https://github.com/miptliot/open_edx_api_extension.git@dogwood#egg=open_edx_api_extension
+-e git+https://github.com/miptliot/npoed-sso-edx-client.git@dogwood#egg=sso_edx_npoed
