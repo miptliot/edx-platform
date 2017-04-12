@@ -24198,3 +24198,93 @@ msgstr "У вас недостаточно прав для выполнения 
 #: edx_proctoring/views.py:580
 msgid "practice"
 msgstr "тренировочный"
+
+#: lms/templates/instructor/instructor_dashboard_2/change_due.html:14
+msgid ""
+"Feature INDIVIDUAL_DUE_DATES is turned off. Your changes won't affect due's till feature activation. Please contact support."
+msgstr "Опция INDIVIDUAL_DUE_DATES отключена. Ваши изменения не будут "
+"задействованы пока опция не будет включена. Пожалуйста, свяжитесь со службой "
+"поддержки"
+
+#: lms/templates/instructor/instructor_dashboard_2/change_due.html:18
+msgid "Here you can change due dates."
+msgstr "Здесь вы можете изменить сроки сдачи."
+
+#: lms/templates/instructor/instructor_dashboard_2/change_due.html:20
+msgid ""
+"You should choose to whom to change dues (user or cohort), to which "
+"courseware to change due (some block or the whole course) and how to "
+"change dues (just add days for current deadline or to set new deadline "
+"date) "
+msgstr "Необходимо выбрать для кого изменять срок (пользователь или когорта), "
+"для какого учебного материала (отдельный блок/секция или весь курс) и "
+"каким образом изменить срок (добавить дней к текущему сроку либо установить новый)."
+
+#: lms/templates/instructor/instructor_dashboard_2/change_due.html:58
+msgid "Block"
+msgstr "Блок"
+
+#: lms/templates/instructor/instructor_dashboard_2/change_due.html:66
+msgid "Add days"
+msgstr "Добавить дней"
+
+#: lms/templates/instructor/instructor_dashboard_2/change_due.html:71
+msgid "E.g: 7"
+msgstr "Например: 7"
+
+#: lms/templates/instructor/instructor_dashboard_2/change_due.html:76
+msgid "E.g. 2017/01/31"
+msgstr "Например: 31/01/2017"
+
+#: lms/templates/instructor/instructor_dashboard_2/change_due.html:83
+msgid "Submit Change Due"
+msgstr "Изменить срок"
+
+#: common/djangoapps/student/management/commands/change_due.py:87
+msgid "No such user: {}"
+msgstr "Учащийся не найден: {}"
+
+#: common/djangoapps/student/management/commands/change_due.py:92
+msgid "No such cohort: {}"
+msgstr "Когорта не найдена: {}"
+
+#: common/djangoapps/student/management/commands/change_due.py:97
+msgid "No such block: {}"
+msgstr "Блок не найден: {}"
+
+#: common/djangoapps/student/management/commands/change_due.py:102
+msgid "Add days must be integer; {} - is not integer "
+msgstr "Количество добавленных дней должно быть числом; {} - не число"
+
+#: common/djangoapps/student/management/commands/change_due.py:107
+msgid "Didn't understand date '{}'; Must be in dd/mm/yyyy"
+msgstr "Дата не распознана: {}; Должна быть в формате дд/мм/гггг"
+
+#: lms/djangoapps/instructor/views/instructor_dashboard.py
+msgid "Change due"
+msgstr "Изменить сроки"
+
+#: lms/templates/instructor/instructor_dashboard_2/change_due.html:14
+msgid "To use this option you should setup cohorts at first."
+msgstr "Для использования этой опции необходимо включить и настроить когорты"
+
+#: lms/djangoapps/instructor/views/api.py: 3329
+msgid "User is not specified"
+msgstr "Пользователь не указан"
+
+#: lms/djangoapps/instructor/views/api.py: 3335
+msgid "Cohort is not specified"
+msgstr "Группа не указана"
+
+#: lms/djangoapps/instructor/views/api.py: 3340
+msgid "Location is not specified"
+msgstr "Местоположение задания не указано"
+
+#: lms/djangoapps/instructor/views/api.py: 3345
+msgid "Days to add are not specified"
+msgstr "Не указано количество добавляемых дней"
+
+#: lms/djangoapps/instructor/views/api.py: 3349
+msgid "Date is not specified"
+msgstr "Дата не указана"
+

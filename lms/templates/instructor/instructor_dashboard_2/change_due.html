@@ -1,0 +1,196 @@
+<%page args="section_data" expression_filter="h"/>
+<%!
+from django.utils.translation import ugettext as _
+from openedx.core.djangolib.markup import HTML
+%>
+
+<div class="vert-left section-change-due" id="section-change-due">
+  <div class="request-response msg msg-confirm copy" id="request-response"></div>
+  <div class ="change-due-disclaimer
+    % if section_data['changed_due_turned_on']:
+      hidden
+    % endif
+       ">
+      ${_("Feature INDIVIDUAL_DUE_DATES is turned off. Your changes won't affect due's till feature activation. Please contact support.")}
+   <hr/>
+  </div>
+  <div>
+    <h3 class="hd hd3">${_("Description")}</h3>
+    <p>  ${_("Here you can change due dates.")} </p>
+    <p>
+        ${_("You should choose to whom to change dues (user or cohort), to which courseware to change due (some block or the whole course) and how to change dues (just add days for current deadline or to set new deadline date) ")}
+    </p>
+  </div>
+  <form id="form-change-due" action="${ section_data['submit_change_due'] }" method="post">
+    <ul class="list-fields">
+      <li class="field change-due-who">
+        <div class="change-due-options">
+          <label class="change-due-options-first"><input name="who" type="radio" value="user" onclick="change_due_exclude(this)">${_("User")}</label>
+          <label for="cohort"><input name="who" type="radio" value="cohort" onclick="change_due_exclude(this)">${_("Cohorts")}</label>
+        </div>
+        <div class="change-due-cohort">
+          <fieldset>
+          <legend class="sr">${_("Cohorts")}</legend>
+          %if len(section_data['cohorts']) > 0:
+            <div class="cohort-management-nav-form-select field field-select">
+              <label for="cohort-select" class="label sr">Select a cohort to manage</label>
+              <select class="input cohort-select" name="cohort" id="cohort-select">
+              %for cohort in section_data['cohorts']:
+                <option value="${cohort.name}" id="target_cohort_${cohort.id}">
+                  ${_("Cohort") +": "+ cohort.name}
+                </option>
+              %endfor
+              </select>
+            </div>
+            %else:
+              <p>${_("To use this option you should setup cohorts at first.")}</p>
+            %endif
+          </fieldset>
+        </div>
+        <div class="change-due-user">
+          <label>
+            <input type="text" id="change-due-user-name" name="user-name" maxlength="20" placeholder="${_("Username")}">
+          </label>
+        </div>
+      </li>
+      <li class="field change-due-where">
+        <div class="change-due-options">
+          <label class="change-due-options-first"><input name="where" type="radio" value="course" onclick="change_due_exclude(this)">${_("Course")}</label>
+          <label><input name="where" type="radio" value="block" onclick="change_due_exclude(this)">${_("Block")}</label>
+        </div>
+        <div id="change-due-location" >
+          <input type="text" name="location" maxlength="128" placeholder="${_("Problem location")}">
+        </div>
+      </li>
+      <li class="field change-due-when">
+        <div class="change-due-options">
+          <label class="change-due-options-first"><input name="when" type="radio" value="add" onclick="change_due_exclude(this)">${_("Add days")}</label>
+          <label><input name="when" type="radio" value="set" onclick="change_due_exclude(this)">${_("Set date")}</label>
+        </div>
+        <div class="change-due-add">
+          <label>
+            <input type="text" id="change-due-input-add-date" name="add-days" maxlength="128" placeholder="${_("E.g: 7")}">
+          </label>
+        </div>
+        <div class="change-due-set">
+          <label>
+            <input type="text" id="change-due-input-set-date" name="set-date" maxlength="10" placeholder="${_("E.g. 2017/01/31")}">
+          </label>
+        </div>
+      </li>
+    </ul>
+    <br />
+    <input type="hidden" name="csrfmiddlewaretoken" value="${ csrf_token }">
+    <input type="button" name="send" value="${_("Submit Change Due")}" onclick="change_due_submit()">
+  </form>
+  <div class="request-response-message hidden"> ${_("Success")} </div>
+
+  <div class="request-response-error"></div>
+
+  %if settings.FEATURES.get('ENABLE_INSTRUCTOR_BACKGROUND_TASKS'):
+  <div class="running-tasks-container action-type-container">
+    <hr>
+    <h3 class="hd hd-3">${_("Pending Tasks")}</h3>
+    <div class="running-tasks-section">
+      <p>${_("The status for any active tasks appears in a table below.")} </p>
+      <br />
+      <div class="running-tasks-table" data-endpoint="${ section_data['list_instructor_tasks_url'] }"></div>
+    </div>
+    <div class="no-pending-tasks-message"></div>
+  </div>
+%endif
+</div>
+
+<%block name="js_extra">
+  <script type="text/javascript">
+    $(document).ready(function () {
+      var when = $(".change-due-when input[value=add]");
+      when.prop("checked", true);
+      var who= $(".change-due-who input[value=cohort]");
+      who.prop("checked", true);
+      var where= $(".change-due-where input[value=block]");
+      where.prop("checked", true);
+      var hide = $(".change-due-set");
+      hide.addClass("hidden");
+      hide = $(".change-due-user");
+      hide.addClass("hidden");
+    });
+    function change_due_submit(){
+      var form = $("#form-change-due");
+      var dataurl = form.attr('action');
+      var msg = form.serialize();
+      $.ajax({
+        type: 'POST',
+        url: dataurl,
+        data: msg,
+        dataType: "json",
+        success: function () {
+          $('.request-response-message').removeClass("hidden");
+          $('#section-change-due').find('.request-response-error').html("");
+        },
+        error: function(data) {
+          $('#section-change-due').find('.request-response-error').html(data["responseJSON"]['message']);
+          $('.request-response-message').addClass("hidden");
+        }
+      });
+      return false;
+     }
+    function change_due_exclude(chosen_radio){
+      if (chosen_radio.value == "user") {
+          $(".change-due-cohort").addClass("hidden");
+          $(".change-due-user").removeClass("hidden");
+      }
+      if (chosen_radio.value == "cohort") {
+          $(".change-due-cohort").removeClass("hidden");
+          $(".change-due-user").addClass("hidden");
+      }
+      if (chosen_radio.value == "course") {
+        var loc = $("#change-due-location");
+        loc.addClass("is-disabled");
+        loc.attr("disabled", "true");
+        loc = loc.find('input')[0];
+        loc.value ='';
+        loc.placeholder = "";
+        $(loc).addClass("blocked");
+      }
+      if (chosen_radio.value == "block") {
+        var loc = $("#change-due-location");
+        loc.removeClass("is-disabled");
+        loc.attr("disabled", "true");
+        loc = loc.find('input')[0];
+        loc.placeholder = "${_("Problem location")}";
+        $(loc).removeClass("blocked");
+      }
+      if (chosen_radio.value == "add") {
+        $(".change-due-set").addClass("hidden");
+        $(".change-due-add").removeClass("hidden");
+      }
+      if (chosen_radio.value == "set") {
+        $(".change-due-set").removeClass("hidden");
+        $(".change-due-add").addClass("hidden");
+      }
+    }
+  </script>
+</%block>
+<%block name="header_extras">
+  <style>
+    .change-due-options{
+      padding: 2em 0 0 0;
+    }
+    .section-change-due input[type="radio"]{
+      vertical-align: baseline;
+    }
+    .section-change-due label{
+      margin: 0 1em 0 0;
+    }
+    .section-change-due .change-due-options-first{
+      float:left;
+    }
+    #change-due-location .blocked{
+      background-color: #efefef;
+    }
+    .change-due-disclaimer{
+      color: red;
+    }
+  </style>
+</%block>
