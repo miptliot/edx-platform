@@ -531,7 +531,7 @@ class VideoDescriptor(VideoFields, VideoTranscriptsMixin, VideoStudioViewHandler
             if 'status' in v:
                 if v['status'] == 'ok':
                     ok_values.append(v)
-                elif v['status'] in ['uploading', 'new']:
+                elif v['status'] in ['uploading', 'new', 'storage', 'compressor']:
                     new_values.append(v)
                 else:
                     error_values.append(v)
