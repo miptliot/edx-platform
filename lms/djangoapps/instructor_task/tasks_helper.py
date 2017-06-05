@@ -65,7 +65,7 @@ from openedx.core.djangoapps.course_groups.models import CourseUserGroup
 from openedx.core.djangoapps.content.course_structures.models import CourseStructure
 from opaque_keys.edx.keys import UsageKey
 from openedx.core.djangoapps.course_groups.cohorts import add_user_to_cohort, is_course_cohorted
-from student.models import CourseEnrollment, CourseAccessRole
+from student.models import CourseEnrollment, CourseAccessRole, UserProfile
 from lms.djangoapps.teams.models import CourseTeamMembership
 from lms.djangoapps.verify_student.models import SoftwareSecurePhotoVerification
 
@@ -738,7 +738,7 @@ def upload_grades_csv(_xmodule_instance_args, _entry_id, course_id, _task_input,
             if not header:
                 header = [section['label'] for section in gradeset[u'section_breakdown']]
                 rows.append(
-                    ["id", "email", "username", "full_name", "grade"] + header + cohorts_header +
+                    ["id", "email", "username", "full_name", "second_name", "grade"] + header + cohorts_header +
                     group_configs_header + teams_header +
                     ['Enrollment Track', 'Verification Status'] + certificate_info_header
                 )
@@ -780,6 +780,15 @@ def upload_grades_csv(_xmodule_instance_args, _entry_id, course_id, _task_input,
                 student.id in whitelisted_user_ids
             )
 
+            try:
+                up = UserProfile.objects.get(user=student)
+                if up.goals:
+                    second_name = json.loads(up.goals).get('second_name')
+                    if not second_name:
+                        second_name = ""
+            except:
+                second_name = ""
+
             # Not everybody has the same gradable items. If the item is not
             # found in the user's gradeset, just assume it's a 0. The aggregated
             # grades for their sections and overall course will be calculated
@@ -788,7 +797,7 @@ def upload_grades_csv(_xmodule_instance_args, _entry_id, course_id, _task_input,
             # still have 100% for the course.
             row_percents = [percents.get(label, 0.0) for label in header]
             rows.append(
-                [student.id, student.email, student.username, student.get_full_name(), gradeset['percent']] +
+                [student.id, student.email, student.username, student.get_full_name(), second_name, gradeset['percent']] +
                 row_percents + cohorts_group_name + group_configs_group_names + team_name +
                 [enrollment_mode] + [verification_status] + certificate_info
             )
