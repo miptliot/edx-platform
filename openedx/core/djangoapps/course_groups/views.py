@@ -14,6 +14,7 @@ from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.utils.translation import ugettext
 
+import datetime
 import logging
 import re
 
@@ -25,7 +26,7 @@ from edxmako.shortcuts import render_to_response
 from . import cohorts
 from lms.djangoapps.django_comment_client.utils import get_discussion_category_map, get_discussion_categories_ids
 from lms.djangoapps.django_comment_client.constants import TYPE_ENTRY
-from .models import CourseUserGroup, CourseUserGroupPartitionGroup, CohortMembership
+from .models import CourseUserGroup, CourseUserGroupPartitionGroup, CohortMembership, CourseCohortStartDate, CourseCohort
 
 log = logging.getLogger(__name__)
 
@@ -87,6 +88,10 @@ def _get_cohort_representation(cohort, course):
     """
     group_id, partition_id = cohorts.get_group_info_for_cohort(cohort)
     assignment_type = cohorts.get_assignment_type(cohort)
+    course_start_date_obj = CourseCohortStartDate.objects.filter(cohort__course_user_group=cohort).first()
+    course_start_date = None
+    if course_start_date_obj:
+        course_start_date = str(course_start_date_obj.datetime)
     return {
         'name': cohort.name,
         'id': cohort.id,
@@ -94,6 +99,7 @@ def _get_cohort_representation(cohort, course):
         'assignment_type': assignment_type,
         'user_partition_id': partition_id,
         'group_id': group_id,
+        'course_start_date': course_start_date,
     }
 
 
@@ -249,6 +255,17 @@ def cohort_handler(request, course_key_string, cohort_id=None):
             if existing_group_id is not None:
                 unlink_cohort_partition_group(cohort)
 
+        course_start_date = request.json.get('course_start_date')
+        if course_start_date:
+            course_start_date = datetime.datetime.strptime(course_start_date, '%Y-%m-%d').date()
+        course_start_date_obj = CourseCohortStartDate.objects.filter(cohort__course_user_group=cohort).first()
+        if course_start_date_obj:
+            course_start_date_obj.datetime = course_start_date
+            course_start_date_obj.save()
+        else:
+            if course_start_date:
+                course_cohort = CourseCohort.objects.filter(course_user_group=cohort).first()
+                CourseCohortStartDate.objects.create(cohort=course_cohort, datetime=course_start_date)
         return JsonResponse(_get_cohort_representation(cohort, course))
 
 

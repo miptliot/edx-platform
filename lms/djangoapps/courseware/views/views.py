@@ -356,7 +356,7 @@ def course_info(request, course_id):
             context['last_accessed_courseware_url'] = get_last_accessed_courseware(course, request, user)
 
         now = datetime.now(UTC())
-        effective_start = _adjust_start_date_for_beta_testers(user, course, course_key)
+        effective_start = _adjust_start_date_for_beta_testers(user, course, course_key, course.start)
         if not in_preview_mode() and staff_access and now < effective_start:
             # Disable student view button if user is staff and
             # course is not yet visible to students.

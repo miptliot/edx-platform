@@ -12,6 +12,8 @@ from courseware.masquerade import is_masquerading_as_student
 from courseware.access_response import AccessResponse, StartDateError
 from xmodule.util.django import get_current_request_hostname
 
+from openedx.core.djangoapps.course_groups.models import CourseCohortStartDate
+
 
 DEBUG_ACCESS = False
 log = getLogger(__name__)
@@ -29,7 +31,7 @@ def debug(*args, **kwargs):
         log.debug(*args, **kwargs)
 
 
-def adjust_start_date(user, days_early_for_beta, start, course_key):
+def adjust_start_date(user, days_early_for_beta, start, course_key, course_start=None):
     """
     If user is in a beta test group, adjust the start date by the appropriate number of
     days.
@@ -37,6 +39,22 @@ def adjust_start_date(user, days_early_for_beta, start, course_key):
     Returns:
         A datetime.  Either the same as start, or earlier for beta testers.
     """
+    from openedx.core.djangoapps.course_groups.cohorts import get_cohort
+    user_cohort = get_cohort(user, course_key)
+    ccsd = CourseCohortStartDate.objects.filter(cohort__course_user_group=user_cohort).first()
+    log.info(start)
+    log.info(course_start)
+    if ccsd:
+        user_course_start_date = datetime.combine(ccsd.datetime, datetime.min.time())
+        import pytz
+        utc = pytz.UTC
+        user_course_start_date = utc.localize(user_course_start_date)
+        if course_start:
+            delta = course_start - user_course_start_date
+            effective = start - delta
+            log.info(effective)
+            return effective
+
     if days_early_for_beta is None:
         # bail early if no beta testing is set up
         return start
@@ -50,7 +68,7 @@ def adjust_start_date(user, days_early_for_beta, start, course_key):
     return start
 
 
-def check_start_date(user, days_early_for_beta, start, course_key):
+def check_start_date(user, days_early_for_beta, start, course_key, course_start=None):
     """
     Verifies whether the given user is allowed access given the
     start date and the Beta offset for the given course.
@@ -66,7 +84,8 @@ def check_start_date(user, days_early_for_beta, start, course_key):
         if start is None or in_preview_mode():
             return ACCESS_GRANTED
 
-        effective_start = adjust_start_date(user, days_early_for_beta, start, course_key)
+        log.info("check_start_date")
+        effective_start = adjust_start_date(user, days_early_for_beta, start, course_key, course_start)
         if now > effective_start:
             return ACCESS_GRANTED
 

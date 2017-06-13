@@ -411,7 +411,7 @@ class CoursewareIndex(View):
 
         # staff masquerading data
         now = datetime.now(UTC())
-        effective_start = _adjust_start_date_for_beta_testers(self.effective_user, self.course, self.course_key)
+        effective_start = _adjust_start_date_for_beta_testers(self.effective_user, self.course, self.course_key, self.course.start)
         if not in_preview_mode() and self.is_staff and now < effective_start:
             # Disable student view button if user is staff and
             # course is not yet visible to students.

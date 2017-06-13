@@ -240,7 +240,10 @@ def _can_access_descriptor_with_start_date(user, descriptor, course_key):  # pyl
         AccessResponse: The result of this access check. Possible results are
             ACCESS_GRANTED or a StartDateError.
     """
-    return check_start_date(user, descriptor.days_early_for_beta, descriptor.start, course_key)
+    from xmodule.modulestore.django import modulestore
+    course = modulestore().get_course(course_key)
+    course_start = course.start
+    return check_start_date(user, descriptor.days_early_for_beta, descriptor.start, course_key, course_start)
 
 
 def _can_view_courseware_with_prerequisites(user, course):  # pylint: disable=invalid-name
@@ -679,7 +682,7 @@ def _dispatch(table, action, user, obj):
         type(obj), action))
 
 
-def _adjust_start_date_for_beta_testers(user, descriptor, course_key):  # pylint: disable=invalid-name
+def _adjust_start_date_for_beta_testers(user, descriptor, course_key, course_start=None):  # pylint: disable=invalid-name
     """
     If user is in a beta test group, adjust the start date by the appropriate number of
     days.
@@ -699,7 +702,8 @@ def _adjust_start_date_for_beta_testers(user, descriptor, course_key):  # pylint
     the user is looking at.  Once we have proper usages and definitions per the XBlock
     design, this should use the course the usage is in.
     """
-    return adjust_start_date(user, descriptor.days_early_for_beta, descriptor.start, course_key)
+    log.info("_adjust_start_date_for_beta_testers")
+    return adjust_start_date(user, descriptor.days_early_for_beta, descriptor.start, course_key, course_start)
 
 
 def _has_instructor_access_to_location(user, location, course_key=None):

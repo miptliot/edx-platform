@@ -212,6 +212,7 @@ class CourseCohort(models.Model):
             course_user_group: CourseUserGroup
             assignment_type: 'random' or 'manual'
         """
+        log.info(cohort_name)
         if course_user_group is None:
             course_user_group, __ = CourseUserGroup.create(cohort_name, course_id)
 
@@ -221,3 +222,11 @@ class CourseCohort(models.Model):
         )
 
         return course_cohort
+
+
+class CourseCohortStartDate(models.Model):
+    """
+    Save course start date for cohort here (if exists)
+    """
+    cohort = models.OneToOneField(CourseCohort)
+    datetime = models.DateField(default=None)

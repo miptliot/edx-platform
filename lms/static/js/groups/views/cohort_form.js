@@ -93,6 +93,10 @@
                     return this.$('input[name="cohort-assignment-type"]:checked').val();
                 },
 
+                getCourseStart: function() {
+                    return this.$('.cohort-course-start-date').val();
+                },
+
                 showMessage: function(message, type, details) {
                     this.showNotification(
                         {type: type || 'confirmation', title: message, details: details},
@@ -122,6 +126,7 @@
                         cohort = this.model,
                         saveOperation = $.Deferred(),
                         isUpdate = !_.isUndefined(this.model.id),
+                        selectedCourseStartDate,
                         fieldData, selectedContentGroup, selectedAssignmentType, errorMessages, showErrorMessage;
                     showErrorMessage = function(message, details) {
                         self.showMessage(message, 'error', details);
@@ -129,10 +134,12 @@
                     this.removeNotification();
                     selectedContentGroup = this.getSelectedContentGroup();
                     selectedAssignmentType = this.getAssignmentType();
+                    selectedCourseStartDate = this.getCourseStart();
                     fieldData = {
                         name: this.getUpdatedCohortName(),
                         group_id: selectedContentGroup ? selectedContentGroup.id : null,
                         user_partition_id: selectedContentGroup ? selectedContentGroup.get('user_partition_id') : null,
+                        course_start_date: selectedCourseStartDate,
                         assignment_type: selectedAssignmentType
                     };
                     errorMessages = this.validate(fieldData);

@@ -168,7 +168,7 @@ FEATURES = {
     'INDIVIDUAL_DUE_DATES': False,
 
     # Enable Custom Courses for EdX
-    'CUSTOM_COURSES_EDX': False,
+    'CUSTOM_COURSES_EDX': True,
 
     # Toggle to enable certificates of courses on dashboard
     'ENABLE_VERIFIED_CERTIFICATES': False,
@@ -369,6 +369,8 @@ FEATURES = {
     # Set this to False to facilitate cleaning up invalid xml from your modulestore.
     'ENABLE_XBLOCK_XML_VALIDATION': True,
 }
+
+FEATURES['CUSTOM_COURSES_EDX'] = True
 
 # Ignore static asset files on import which match this pattern
 ASSET_IGNORE_REGEX = r"(^\._.*$)|(^\.DS_Store$)|(^.*~$)"
