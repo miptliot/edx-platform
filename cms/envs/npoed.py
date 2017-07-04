@@ -83,3 +83,8 @@ ROOT_URLCONF = 'sso_edx_npoed.cms_urls'
 
 INSTALLED_APPS += ("openedx.core.djangoapps.video_evms", )
 FEATURES["PROCTORED_EXAMS_ATTEMPT_DELETE"] = True
+
+EDX_API_KEY = AUTH_TOKENS.get("EDX_API_KEY")
+INSTALLED_APPS += (
+    'open_edx_api_extension_cms',
+)

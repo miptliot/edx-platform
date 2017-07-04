@@ -1,3 +1,4 @@
 -e git+https://github.com/miptliot/open_edx_api_extension.git@release-2017-06-12#egg=open_edx_api_extension
+-e git+https://github.com/miptliot/open_edx_api_extension_cms@release-2017-07-04#egg=open_edx_api_extension_cms
 -e git+https://github.com/miptliot/npoed-sso-edx-client.git@master#egg=sso_edx_npoed
 icalendar==3.11.3
