@@ -1,2 +1,2 @@
 # Collect exceptions
-raven==5.12.0
+raven==6.1.0
