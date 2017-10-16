@@ -282,3 +282,18 @@ if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
 MODULESTORE = convert_module_store_setting_if_needed(MODULESTORE)
 
 SECRET_KEY = '85920908f28904ed733fe576320db18cabd7b6cd'
+
+ORA2_FILEUPLOAD_BACKEND = 'filesystem'
+FEATURES['ENABLE_SPECIAL_EXAMS'] = True
+
+# Locale/Internationalization
+TIME_ZONE = 'Europe/Moscow'  # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
+LANGUAGE_CODE = 'ru'  # http://www.i18nguy.com/unicode/language-identifiers.html
+
+INSTALLED_APPS += ('course_shifts',)
+FEATURES["ENABLE_COURSE_SHIFTS"] = True
+FIELD_OVERRIDE_PROVIDERS += (
+    'course_shifts.provider.CourseShiftOverrideProvider',
+)
+
+MAKO_TEMPLATES['main'] += ['/edx/app/edxapp/venvs/edxapp/src/course-shifts/templates']

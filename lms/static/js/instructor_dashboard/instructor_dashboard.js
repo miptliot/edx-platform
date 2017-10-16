@@ -196,6 +196,9 @@ such that the value can be defined later than this assignment (file load order).
             }, {
                 constructor: window.InstructorDashboard.sections.OpenResponseAssessment,
                 $element: idashContent.find('.' + CSS_IDASH_SECTION + '#open_response_assessment')
+            }, {
+                constructor: window.InstructorDashboard.sections.CourseShifts,
+                $element: idashContent.find('.' + CSS_IDASH_SECTION + '#course_shifts')
             }
         ];
         if (edx.instructor_dashboard.proctoring !== void 0) {

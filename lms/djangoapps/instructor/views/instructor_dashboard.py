@@ -57,6 +57,8 @@ from openedx.core.djangoapps.site_configuration import helpers as configuration_
 from openedx.core.djangoapps.verified_track_content.models import VerifiedTrackCohortedCourse
 
 from openedx.core.djangolib.markup import HTML, Text
+from course_shifts import section_course_shifts
+
 
 log = logging.getLogger(__name__)
 
@@ -184,14 +186,14 @@ def instructor_dashboard_2(request, course_id):
         settings.FEATURES.get('ENABLE_SPECIAL_EXAMS', False)
     )
 
-    if request.user.id in settings.USERS_WITH_SPECIAL_PERMS_IDS:
+    if request.user.id in getattr(settings, 'USERS_WITH_SPECIAL_PERMS_IDS', []):
         access['admin'] = True
         can_see_special_exams = True
 
     if can_see_special_exams:
         sections.append(_section_special_exams(course, access))
 
-    if request.user.id in settings.USERS_WITH_SPECIAL_PERMS_IDS:
+    if request.user.id in getattr(settings, 'USERS_WITH_SPECIAL_PERMS_IDS', []):
         access['admin'] = False
 
     # Certificates panel
@@ -234,6 +236,11 @@ def instructor_dashboard_2(request, course_id):
     )
 
     certificate_invalidations = CertificateInvalidation.get_certificate_invalidations(course_key)
+
+    if settings.FEATURES.get("ENABLE_COURSE_SHIFTS"):
+        course_shifts_section = (section_course_shifts(course, access))
+        if course_shifts_section:
+            sections.append(course_shifts_section)
 
     context = {
         'course': course,

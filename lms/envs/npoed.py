@@ -77,5 +77,12 @@ if AUTH_TOKENS.get('AWS_S3_CALLING_FORMAT'):
 INSTALLED_APPS += (
     # Api extension for openedu
     'open_edx_api_extension',
-    'video_evms',
+    #'video_evms',
+    'course_shifts',
 )
+FEATURES["ENABLE_COURSE_SHIFTS"] = True
+FIELD_OVERRIDE_PROVIDERS += (
+    'course_shifts.provider.CourseShiftOverrideProvider',
+)
+
+MAKO_TEMPLATES['main'] += []

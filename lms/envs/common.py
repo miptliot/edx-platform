@@ -509,6 +509,7 @@ TEMPLATES = [
             COMMON_ROOT / 'lib' / 'capa' / 'capa' / 'templates',
             COMMON_ROOT / 'djangoapps' / 'pipeline_mako' / 'templates',
             COMMON_ROOT / 'static',  # required to statically include common Underscore templates
+            '/edx/app/edxapp/venvs/edxapp/src/course-shifts/templates',
         ],
         # Options specific to this backend.
         'OPTIONS': {

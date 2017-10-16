@@ -86,7 +86,10 @@ from openedx.core.djangolib.markup import HTML
   <%static:include path="instructor/instructor_dashboard_2/${template_name}.underscore" />
 </script>
 % endfor
-
+<script type="text/template" id="course-shifts-detail-tpl">
+  <%static:include path="course-shifts-detail.underscore" />
+</script>
+<script type="text/javascript" src="${static.url('js/instructor_dashboard/course_shifts.js')}"></script>
 <script type="text/template" id="file-upload-tpl">
   <%static:include path="file-upload.underscore" />
 </script>

@@ -1016,3 +1016,13 @@ if settings.ORA2_FILEUPLOAD_BACKEND == 'filesystem':
 urlpatterns += (
     url(r'^', include('sso_edx_npoed.sso_api_urls')),
 )
+
+if settings.FEATURES.get("ENABLE_COURSE_SHIFTS"):
+    urlpatterns += (
+        url(r'^course_shifts/',
+            include(
+                'course_shifts.urls',
+                app_name="course_shifts",
+                namespace="course_shifts")
+            ),
+        )

@@ -198,7 +198,7 @@ def cohort_handler(request, course_key_string, cohort_id=None):
         if not cohort_id:
             all_cohorts = [
                 _get_cohort_representation(c, course)
-                for c in cohorts.get_course_cohorts(course)
+                for c in cohorts.get_course_cohorts(course) if hasattr(c, 'cohort')
             ]
             return JsonResponse({'cohorts': all_cohorts})
         else:
