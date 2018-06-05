@@ -956,11 +956,17 @@ class VideoDescriptor(VideoDescriptorEvmsMixin, VideoFields, VideoTranscriptsMix
             elif context.get("allow_cache_miss", "True").lower() == "true":
                 try:
                     val_video_data = edxval_api.get_video_info(self.edx_video_id)
+                    if val_video_data is None:
+                        val_video_data = {}
                     # Unfortunately, the VAL API is inconsistent in how it returns the encodings, so remap here.
                     for enc_vid in val_video_data.pop('encoded_videos'):
                         if enc_vid['profile'] in video_profile_names:
                             encoded_videos[enc_vid['profile']] = {key: enc_vid[key] for key in ["url", "file_size"]}
                 except edxval_api.ValVideoNotFoundError:
+                    pass
+                except AttributeError:
+                    pass
+                except KeyError:
                     pass
 
         # Fall back to other video URLs in the video module if not found in VAL
