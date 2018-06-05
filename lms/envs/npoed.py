@@ -24,7 +24,7 @@ MIDDLEWARE_CLASSES += (
 PLP_URL = ENV_TOKENS.get('PLP_URL')
 if PLP_URL:
     PLP_URL = PLP_URL.rstrip('/')
-
+PLP_API_KEY = AUTH_TOKENS.get('PLP_API_KEY')
 # We should login always with npoed-sso
 # from sso_edx_npoed.backends.npoed import NpoedBackend
 # NpoedBackend.name
@@ -82,3 +82,17 @@ FEATURES["ENABLE_GRADING_FEATURES"] = True
 INSTALLED_APPS += ("video_evms",)
 FEATURES["EVMS_TURN_ON"] = True
 EDX_RELEASE = 'ginkgo'
+
+# Increase max ora size up to 100 MB
+STUDENT_FILEUPLOAD_MAX_SIZE = 100 * 1000 * 1000
+
+SITE_NAME = "learn.openprofession.ru"
+
+GRADES_DOWNLOAD['STORAGE_KWARGS']['location'] = "/edx/var/edxapp/media/grades"
+_base_url = MEDIA_URL
+if not _base_url.endswith('/'):
+    _base_url += '/'
+_base_url += "grades/"
+GRADES_DOWNLOAD['STORAGE_KWARGS']['base_url']= _base_url
+if ENV_TOKENS.get('RAVEN_DSN', None):
+    RAVEN_DSN = ENV_TOKENS.get('RAVEN_DSN')

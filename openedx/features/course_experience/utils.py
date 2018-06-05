@@ -115,6 +115,6 @@ def override_subsection_due_dates(request, course_key, all_blocks):
     chapters_ids = get_by_category('chapter')
     for usage_id in keys_to_remove:
         for chapter_id in chapters_ids:
-            if usage_id in blocks[chapter_id]['children']:
+            if usage_id in blocks[chapter_id].get('children', []):
                 blocks[chapter_id]['children'].remove(usage_id)
                 continue # there is only one parent anyway
