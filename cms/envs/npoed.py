@@ -81,6 +81,7 @@ INSTALLED_APPS += ('course_shifts',)
 INSTALLED_APPS += ('npoed_grading_features',)
 FEATURES["ENABLE_COURSE_SHIFTS"] = True
 FEATURES["ENABLE_GRADING_FEATURES"] = True
+FEATURES["CERTIFICATES_HTML_VIEW"] = True
 
 INSTALLED_APPS += ("video_evms",)
 FEATURES["EVMS_TURN_ON"] = True
