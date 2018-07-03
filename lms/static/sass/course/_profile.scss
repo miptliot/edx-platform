@@ -213,11 +213,11 @@
             border-bottom: 1px solid $lightGrey;
             padding: lh(0.5);
             > .requirement-name {
-              width: bi-app-invert-percentage(40%);
+              width: bi-app-invert-percentage(70%);
               display: inline-block;
             }
             > .requirement-status{
-              width: bi-app-invert-percentage(60%);
+              width: bi-app-invert-percentage(30%);
               @include float(right);
               display: inline-block;
               .fa-times{
