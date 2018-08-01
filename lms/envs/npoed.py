@@ -78,6 +78,7 @@ INSTALLED_APPS += (
     # Api extension for openedu
     'open_edx_api_extension',
     'video_evms',
+    'rg_instructor_analytics',
 )
 
 INSTALLED_APPS += ('openedx.core.djangoapps.instructor_reset_track', )
@@ -102,3 +103,22 @@ PROCTORING_DEFAULT_LINK_URLS = AUTH_TOKENS.get('PROCTORING_DEFAULT_LINK_URLS')
 INSTALLED_APPS += ('openedx.core.djangoapps.npoed_session_monitor',)
 FEATURES["ENABLE_SUSPICIOUS_MONITOR"] = True
 FEATURES["ENABLE_SUSPICIOUS_MONITOR_ADMIN"] = True # Optional
+
+FEATURES['ENABLE_XBLOCK_VIEW_ENDPOINT'] = True
+FEATURES['ENABLE_RG_INSTRUCTOR_ANALYTICS'] = True
+
+RG_ANALYTICS_ENROLLMENT_STAT_UPDATE = {
+    'minute': '*',
+    'hour': '*/6',
+    'day_of_week': '*',
+    'day_of_month': '*',
+    'month_of_year': '*',
+}
+
+RG_ANALYTICS_GRADE_STAT_UPDATE = {
+    'minute': '*',
+    'hour': '*/6',
+    'day_of_week': '*',
+    'day_of_month': '*',
+    'month_of_year': '*',
+}

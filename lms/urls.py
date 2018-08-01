@@ -1031,3 +1031,17 @@ urlpatterns += (
 urlpatterns += (
     url(r'^api/extended/instructor_reset_track/', include('openedx.core.djangoapps.instructor_reset_track.urls')),
 )
+
+try:
+    import rg_instructor_analytics.urls
+    urlpatterns += (
+        url(
+            r'^courses/{}/tab/instructor_analytics/'.format(
+                settings.COURSE_ID_PATTERN,
+            ),
+            include('rg_instructor_analytics.urls'),
+            name='instructor_analytics_endpoint'
+        )
+    )
+except ImportError:
+    pass
