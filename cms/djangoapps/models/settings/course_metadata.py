@@ -7,6 +7,8 @@ from xmodule.modulestore.django import modulestore
 
 from django.utils.translation import ugettext as _
 from django.conf import settings
+# NPOED: SUPPORT-927
+from open_edx_api_extension.api_client import PlpApiClient
 
 
 class CourseMetadata(object):
@@ -201,7 +203,9 @@ class CourseMetadata(object):
         # If did validate, go ahead and update the metadata
         if did_validate:
             updated_data = cls.update_from_dict(key_values, descriptor, user, save=False)
-
+        if did_validate and 'days_early_for_beta' in key_values:
+            course_id = str(descriptor.location.course_key)
+            PlpApiClient().push_betatest_leeway(course_id, key_values['days_early_for_beta'])
         return did_validate, errors, updated_data
 
     @classmethod
