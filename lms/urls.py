@@ -1041,7 +1041,7 @@ try:
             ),
             include('rg_instructor_analytics.urls'),
             name='instructor_analytics_endpoint'
-        )
+        ),
     )
 except ImportError:
     pass
