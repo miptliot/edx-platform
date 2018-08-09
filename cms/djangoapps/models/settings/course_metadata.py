@@ -7,6 +7,8 @@ from xmodule.modulestore.django import modulestore
 
 from django.utils.translation import ugettext as _
 from django.conf import settings
+# NPOED: EDX-605
+import requests
 
 
 class CourseMetadata(object):
@@ -201,6 +203,26 @@ class CourseMetadata(object):
         # If did validate, go ahead and update the metadata
         if did_validate:
             updated_data = cls.update_from_dict(key_values, descriptor, user, save=False)
+
+        #================= EDX-605 begin ===========================
+        if did_validate and 'days_early_for_beta' in key_values:
+            course_id = str(descriptor.location.course_key)
+            plp_beta_tester_url = "{}{}".format(settings.PLP_URL, '/api/course-betatest-leeway/')
+            value = key_values['days_early_for_beta']
+            if value is None:
+                value = 0
+            data = {
+                "course_id": str(course_id),
+                "days": int(value)
+            }
+            api_key = getattr(settings, "PLP_API_KEY", None)
+            headers = {'x-plp-api-key': api_key}
+            try:
+                plp_response = requests.post(plp_beta_tester_url, data=data, headers=headers)
+            except:
+                import logging
+                logging.error("PLP connection error")
+        #================= EDX-605 end ===========================
 
         return did_validate, errors, updated_data
 
