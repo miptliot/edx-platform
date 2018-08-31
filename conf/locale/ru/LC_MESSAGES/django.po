@@ -2949,7 +2949,7 @@ msgstr "Выбрать оба"
 #: common/lib/xmodule/xmodule/course_module.py lms/djangoapps/branding/api.py lms/templates/footer.html lms/templates/static_templates/about.html
 #: themes/red-theme/lms/templates/footer.html themes/stanford-style/lms/templates/footer.html themes/stanford-style/lms/templates/static_templates/about.html
 msgid "About"
-msgstr "О нас"
+msgstr "О проекте"
 
 #: common/lib/xmodule/xmodule/course_module.py cms/templates/settings.html
 msgid "None"
@@ -22784,3 +22784,94 @@ msgstr "Прокторинг на рассмотрении для {course_name} 
 #, python-brace-format
 msgid "Proctored exam {exam_name} in {course_name} for user {username}"
 msgstr "Прокторинговое испытание {exam_name} на курсе {course_name} для пользователя {username}"
+
+msgid "Course Catalog"
+msgstr "Каталог курсов"
+
+msgid "Partnership"
+msgstr "Сотрудничество"
+
+msgid "Search in Catalog"
+msgstr "Поиск в каталоге"
+
+msgid "Terms of Policy"
+msgstr "Пользовательское соглашение"
+
+msgid "Study Directions"
+msgstr "Напрвления подготовки"
+
+msgid "Openedu"
+msgstr "Открытое Образование"
+
+msgid "Openedu in facebook"
+msgstr "Группа Национальной платформы открытого образования в facebook"
+
+msgid "Openedu in VK"
+msgstr "Группа Национальной платформы открытого образования во ВКонтакте"
+
+msgid "Openedu in OK"
+msgstr "Группа Национальной платформы открытого образования в Одноклассниках"
+
+msgid "Openedu in twitter"
+msgstr "Страница Национальной платформы открытого образования в twitter"
+
+msgid "Openedu in Instagram"
+msgstr "Группа Национальной платформы открытого образования в Instagram"
+
+#: openedx/openedu/lms/email/util.py
+#, python-brace-format
+msgid ""
+"<br/><p>You received this email because you are enrolled in the course "
+"\"{course_title}\"\n"
+"    on the platform \"Openedu\". If you want to continue learning\n"
+"    follow <a href=\"{course_url}courseware\">this link.</a></p>"
+msgstr ""
+"<br/><p>Вы получили это письмо, потому что записаны на курс "
+"\"{course_title}\"\n"
+"    на платформе \"Открытое образование\". Чтобы продолжить обучение,\n"
+"    перейдите <a href=\"{course_url}courseware\">по ссылке.</a></p>"
+
+#: openedx/openedu/lms/email/util.py
+#, python-brace-format
+msgid ""
+"You received this email because you are enrolled in the course \"{course_title}\"\n"
+"    on the platform \"Openedu\". If you want to continue learning\n"
+"    follow this link {course_url}courseware."
+msgstr ""
+"Вы получили это письмо, потому что записаны на курс \"{course_title}\"\n"
+"    на платформе \"Открытое образование\". Чтобы продолжить обучение,\n"
+"    перейдите по по ссылке {course_url}courseware."
+
+#: openedx/openedu/lms/email/util.py
+#, python-brace-format
+msgid "{html_msg} {to_course_html_msg}"
+msgstr "{html_msg} {to_course_html_msg}"
+
+#: openedx/openedu/lms/email/util.py:25
+#, python-brace-format
+msgid "{plaintext_msg} {to_course_plaintext_msg}"
+msgstr "{plaintext_msg} {to_course_plaintext_msg}"
+
+#: openedx/openedu/lms/email/util.py
+#, python-brace-format
+msgid ""
+"{html_msg} For unsubscribe follow\n"
+"    <a href=\"{unsubscribe_url}\">this link.</a>"
+msgstr ""
+"{html_msg} Для отписки от рассылки курса перейдите\n"
+"    <a href=\"{unsubscribe_url}\">по ссылке.</a>"
+
+#: openedx/openedu/lms/email/util.py
+#, python-brace-format
+msgid ""
+"{plaintext_msg} For unsubscribe follow\n"
+"    this link {unsubscribe_url}."
+msgstr ""
+"{plaintext_msg} Для отписки от рассылки курса перейдите\n"
+"    по ссылке {unsubscribe_url}."
+
+#: openedx/openedu/lms/email/util.py
+#, python-brace-format
+msgid "\"Course {course_title}\" <{from_email}>"
+msgstr "\"Курс {course_title}\" <{from_email}>"
+

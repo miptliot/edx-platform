@@ -53,4 +53,24 @@ INSTALLED_APPS += (
     # Api extension for openedu
     'open_edx_api_extension',
     'video_evms',
+    'rg_instructor_analytics',
 )
+
+FEATURES['ENABLE_XBLOCK_VIEW_ENDPOINT'] = True
+FEATURES['ENABLE_RG_INSTRUCTOR_ANALYTICS'] = True
+
+RG_ANALYTICS_ENROLLMENT_STAT_UPDATE = {
+    'minute': '*',
+    'hour': '*/6',
+    'day_of_week': '*',
+    'day_of_month': '*',
+    'month_of_year': '*',
+}
+
+RG_ANALYTICS_GRADE_STAT_UPDATE = {
+    'minute': '*',
+    'hour': '*/6',
+    'day_of_week': '*',
+    'day_of_month': '*',
+    'month_of_year': '*',
+}

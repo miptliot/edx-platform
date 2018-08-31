@@ -203,7 +203,6 @@ class CourseMetadata(object):
         # If did validate, go ahead and update the metadata
         if did_validate:
             updated_data = cls.update_from_dict(key_values, descriptor, user, save=False)
-
         #================= EDX-605 begin ===========================
         if did_validate and 'days_early_for_beta' in key_values:
             course_id = str(descriptor.location.course_key)
@@ -223,7 +222,6 @@ class CourseMetadata(object):
                 import logging
                 logging.error("PLP connection error")
         #================= EDX-605 end ===========================
-
         return did_validate, errors, updated_data
 
     @classmethod

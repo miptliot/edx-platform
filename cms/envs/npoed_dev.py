@@ -56,6 +56,7 @@ EVMS_API_KEY = 'xxxxxxxxxxxxxxxxxx'
 
 FEATURES['PROCTORED_EXAMS_ATTEMPT_DELETE'] = True
 
+EDX_API_KEY = AUTH_TOKENS.get("EDX_API_KEY")
 INSTALLED_APPS += (
     # Api extension for openedu
     'video_evms',

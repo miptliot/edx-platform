@@ -1089,7 +1089,7 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
         except TypeError:
             all_proctoring_services = course.available_proctoring_services
         if ',' in all_proctoring_services:
-            proctoring_services = all_proctoring_services.split(',')
+            proctoring_services = [item.strip() for item in all_proctoring_services.split(',')]
 
     # Compute the child info first so it can be included in aggregate information for the parent
     should_visit_children = include_child_info and (course_outline and not is_xblock_unit or not course_outline)

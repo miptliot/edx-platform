@@ -181,7 +181,7 @@ class ProctoringFields(object):
         Returns the list of proctoring services for the course if available, else None
         """
         if self._get_course().available_proctoring_services:
-            return self._get_course().available_proctoring_services.split(",")
+            return [item.strip() for item in self._get_course().available_proctoring_services.split(",")]
         else:
             return None
 
