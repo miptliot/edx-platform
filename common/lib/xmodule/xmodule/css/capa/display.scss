@@ -443,7 +443,7 @@ div.problem {
       &:before {
         @extend %t-strong;
         display: inline;
-        content: "Ответ: ";
+        content: "\01F4A1";
 
       }
       &:empty {

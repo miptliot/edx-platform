@@ -35,6 +35,7 @@ from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives, get_connection
 from django.core.mail.message import forbid_multi_line_headers
 from django.core.urlresolvers import reverse
+from django.utils import translation
 
 from bulk_email.models import CourseEmail, Optout
 from courseware.courses import get_course
@@ -111,6 +112,7 @@ def _get_course_email_context(course):
     email_context = {
         'course_title': course_title,
         'course_root': course_root,
+        'course_language': course.language,
         'course_url': course_url,
         'course_image_url': image_url,
         'course_end_date': course_end_date,
@@ -479,6 +481,9 @@ def _send_course_email(entry_id, email_id, to_list, global_email_context, subtas
     course_title = global_email_context['course_title']
 
     # use the email from address in the CourseEmail, if it is present, otherwise compute it
+    course_language = global_email_context['course_language']
+    if course_language:
+        translation.activate(course_language)
     from_addr = course_email.from_addr if course_email.from_addr else \
         _get_source_address(course_email.course_id, course_title)
 

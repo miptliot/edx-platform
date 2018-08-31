@@ -22817,3 +22817,61 @@ msgstr "Страница Национальной платформы откры�
 
 msgid "Openedu in Instagram"
 msgstr "Группа Национальной платформы открытого образования в Instagram"
+
+#: openedx/openedu/lms/email/util.py
+#, python-brace-format
+msgid ""
+"<br/><p>You received this email because you are enrolled in the course "
+"\"{course_title}\"\n"
+"    on the platform \"Openedu\". If you want to continue learning\n"
+"    follow <a href=\"{course_url}courseware\">this link.</a></p>"
+msgstr ""
+"<br/><p>Вы получили это письмо, потому что записаны на курс "
+"\"{course_title}\"\n"
+"    на платформе \"Открытое образование\". Чтобы продолжить обучение,\n"
+"    перейдите <a href=\"{course_url}courseware\">по ссылке.</a></p>"
+
+#: openedx/openedu/lms/email/util.py
+#, python-brace-format
+msgid ""
+"You received this email because you are enrolled in the course \"{course_title}\"\n"
+"    on the platform \"Openedu\". If you want to continue learning\n"
+"    follow this link {course_url}courseware."
+msgstr ""
+"Вы получили это письмо, потому что записаны на курс \"{course_title}\"\n"
+"    на платформе \"Открытое образование\". Чтобы продолжить обучение,\n"
+"    перейдите по по ссылке {course_url}courseware."
+
+#: openedx/openedu/lms/email/util.py
+#, python-brace-format
+msgid "{html_msg} {to_course_html_msg}"
+msgstr "{html_msg} {to_course_html_msg}"
+
+#: openedx/openedu/lms/email/util.py:25
+#, python-brace-format
+msgid "{plaintext_msg} {to_course_plaintext_msg}"
+msgstr "{plaintext_msg} {to_course_plaintext_msg}"
+
+#: openedx/openedu/lms/email/util.py
+#, python-brace-format
+msgid ""
+"{html_msg} For unsubscribe follow\n"
+"    <a href=\"{unsubscribe_url}\">this link.</a>"
+msgstr ""
+"{html_msg} Для отписки от рассылки курса перейдите\n"
+"    <a href=\"{unsubscribe_url}\">по ссылке.</a>"
+
+#: openedx/openedu/lms/email/util.py
+#, python-brace-format
+msgid ""
+"{plaintext_msg} For unsubscribe follow\n"
+"    this link {unsubscribe_url}."
+msgstr ""
+"{plaintext_msg} Для отписки от рассылки курса перейдите\n"
+"    по ссылке {unsubscribe_url}."
+
+#: openedx/openedu/lms/email/util.py
+#, python-brace-format
+msgid "\"Course {course_title}\" <{from_email}>"
+msgstr "\"Курс {course_title}\" <{from_email}>"
+

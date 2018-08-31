@@ -7,6 +7,8 @@ to the templates without having to append every view file.
 """
 from openedx.core.djangoapps.user_api.errors import UserNotFound, UserAPIInternalError
 from openedx.core.djangoapps.user_api.preferences.api import get_user_preferences
+from xmodule.modulestore.django import modulestore
+from util.request import course_id_from_url
 import request_cache
 
 RETRIEVABLE_PREFERENCES = {
@@ -41,6 +43,11 @@ def user_timezone_locale_prefs(request):
                     key: user_preferences.get(pref_name, None)
                     for key, pref_name in RETRIEVABLE_PREFERENCES.iteritems()
                 }
+            course_key = course_id_from_url(request.path)
+            if course_key:
+                course = modulestore().get_course(course_key)
+                if course and hasattr(course, 'language') and course.language:
+                    user_prefs['user_language'] = course.language
 
         cached_value.update(user_prefs)
     return cached_value
