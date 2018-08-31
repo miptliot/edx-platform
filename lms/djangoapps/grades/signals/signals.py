@@ -91,3 +91,12 @@ VERTICAL_SCORE_CHANGED = Signal(
         'vertical_grade',  # VerticalGrade object
     ]
 )
+
+# Signal that indicates that a user's progress was calulated while user visited progress page.
+PROGRESS_PAGE_VISITED = Signal(
+    providing_args=[
+        'course_id',  #  Unicode string representing the course
+        'user',   # User object
+        'progress', # User progress in course (from 0 to 100)
+    ]
+)
