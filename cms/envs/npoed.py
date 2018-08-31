@@ -114,3 +114,7 @@ LOCALE_PATHS += (ORA_LOCALE_PATH,)
 PROCTOR_PATH_VENV = "venvs/edxapp/src/edx-proctoring/edx_proctoring"
 PROCTOR_LOCALE_PATH = '{}/{}/locale'.format(PROJECT_ROOT.dirname().dirname(), PROCTOR_PATH_VENV)
 LOCALE_PATHS += (PROCTOR_LOCALE_PATH,)
+
+PLP_API_KEY = AUTH_TOKENS.get('PLP_API_KEY')
+
+FEATURES['ALLOW_HIDING_DISCUSSION_TAB'] = True

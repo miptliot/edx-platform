@@ -2,4 +2,5 @@
 -e git+https://github.com/miptliot/open_edx_api_extension_cms.git@ficus_prod#egg=open_edx_api_extension_cms
 -e git+https://github.com/miptliot/npoed-sso-edx-client.git@ficus#egg=sso_edx_npoed
 -e git+https://github.com/miptliot/video_evms.git@master#egg=video_evms
+-e git+https://github.com/miptliot/rg_instructor_analytics.git@openedu#egg=rg_instructor_analytics
 icalendar==3.11.7
