@@ -17,7 +17,6 @@ log = getLogger(__name__)
 
 
 def stsos_data(kwargs):
-
     cache_key = 'User_ESIA_ID_{}'.format(kwargs['user_id'])
     esia_id = cache.get(cache_key)
     if not esia_id:
@@ -112,4 +111,42 @@ def stsos_enroll_data(kwargs):
     stsos['usiaId'] = esia_id
     stsos['enrollDate'] = datetime.now().replace(tzinfo=pytz.UTC).strftime('%Y-%m-%dT%H:%M:%S%z')
     stsos['type'] = 'enroll'
+    log.info(json.dumps(stsos))
+
+
+def stsos_progress_data(kwargs):
+    progress = kwargs.get('progress',{}).get('percent')
+    if not progress:
+        return
+    cache_key = 'User_ESIA_ID_{}'.format(kwargs['user'].id)
+    esia_id = cache.get(cache_key)
+    if not esia_id:
+        up = UserProfile.objects.filter(user=kwargs['user']).first()
+        if up:
+            try:
+                esia_id = json.loads(up.goals).get('sud')
+            except:
+                esia_id = 'null'
+            if not esia_id:
+                esia_id = 'null'
+        else:
+            esia_id = 'null'
+        cache.set(cache_key, esia_id, 1800)
+    if esia_id == 'null':
+        return
+    stsos_cache_key = "Stsos_Course_Ids_Json"
+    stsos_ids = cache.get(stsos_cache_key)
+    if not stsos_ids:
+        stsos_ids = requests.get('https://openedu.ru/api/courses/stsos_ids/?format=json').json()
+        cache.set(stsos_cache_key, stsos_ids, 7200)
+    prefix, plp_course_id, course_run = str(kwargs['course_id']).split('+')
+    if not plp_course_id in stsos_ids:
+        return
+    stsos_id = stsos_ids[plp_course_id]
+    stsos = dict()
+    stsos['courseId'] = stsos_id
+    stsos['sessionId'] = str(kwargs['course_id'])
+    stsos['usiaId'] = esia_id
+    stsos['progress'] = int(float(progress)*100)
+    stsos['type'] = 'progress'
     log.info(json.dumps(stsos))
