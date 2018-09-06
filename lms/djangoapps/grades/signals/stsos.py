@@ -109,7 +109,7 @@ def stsos_enroll_data(kwargs):
     stsos['courseId'] = stsos_id
     stsos['sessionId'] = str(kwargs['course_id'])
     stsos['usiaId'] = esia_id
-    stsos['enrollDate'] = datetime.now().replace(tzinfo=pytz.UTC).strftime('%Y-%m-%dT%H:%M:%S%z')
+    stsos['enrollDate'] = datetime.utcnow().replace(tzinfo=pytz.UTC).strftime('%Y-%m-%dT%H:%M:%S%z')
     stsos['type'] = 'enroll'
     log.info(json.dumps(stsos))
 
