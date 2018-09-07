@@ -26,8 +26,9 @@ from .signals import (
     SUBSECTION_SCORE_CHANGED,
     VERTICAL_SCORE_CHANGED,
     SCORE_PUBLISHED,
+    PROGRESS_PAGE_VISITED,
 )
-from .stsos import stsos_data, stsos_enroll_data
+from .stsos import stsos_data, stsos_enroll_data, stsos_progress_data
 from ..constants import ScoreDatabaseTableEnum
 from ..new.course_grade_factory import CourseGradeFactory
 from ..scores import weighted_score
@@ -291,3 +292,8 @@ def stsos_handler(sender, **kwargs):
 @receiver(ENROLL_STATUS_CHANGE)
 def stsos_enroll_handler(sender, **kwargs):
     stsos_enroll_data(kwargs)
+
+
+@receiver(PROGRESS_PAGE_VISITED)
+def stsos_progress_handler(sender, **kwargs):
+    stsos_progress_data(kwargs)
