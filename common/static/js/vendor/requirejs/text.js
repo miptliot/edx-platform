@@ -182,8 +182,24 @@ var requirejs_text_function = function (module) {
                 return;
             }
 
+            var forciblyUseXhr = false;
+            var postfix = '.underscore';
+            if (url.indexOf(postfix, url.length - postfix.length) !== -1) {
+                forciblyUseXhr = true;
+            }
+
             //Load the text. Use XHR if possible and in a browser.
-            if (!hasLocation || useXhr(url, defaultProtocol, defaultHostName, defaultPort)) {
+            if (forciblyUseXhr || !hasLocation || useXhr(url, defaultProtocol, defaultHostName, defaultPort)) {
+                if (forciblyUseXhr && (url.indexOf(window.location.origin) === -1)) {
+                    var parser = document.createElement('a');
+                    parser.href = url;
+                    var pathname = parser.pathname;
+                    var pathnameArr = pathname.split('/');
+                    if ((pathnameArr.length > 1) && (pathnameArr[1] !== 'static')) {
+                        pathnameArr[1] = 'static';
+                    }
+                    url = window.location.origin + pathnameArr.join('/');
+                }
                 text.get(url, function (content) {
                     text.finishLoad(name, parsed.strip, content, onLoad);
                 }, function (err) {
