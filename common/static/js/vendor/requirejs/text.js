@@ -190,7 +190,7 @@ var requirejs_text_function = function (module) {
 
             //Load the text. Use XHR if possible and in a browser.
             if (forciblyUseXhr || !hasLocation || useXhr(url, defaultProtocol, defaultHostName, defaultPort)) {
-                if (forciblyUseXhr && (url.indexOf(window.location.origin) === -1)) {
+                if (forciblyUseXhr && hasLocation && (url.indexOf(location.origin) === -1)) {
                     var parser = document.createElement('a');
                     parser.href = url;
                     var pathname = parser.pathname;
@@ -198,7 +198,7 @@ var requirejs_text_function = function (module) {
                     if ((pathnameArr.length > 1) && (pathnameArr[1] !== 'static')) {
                         pathnameArr[1] = 'static';
                     }
-                    url = window.location.origin + pathnameArr.join('/');
+                    url = location.origin + pathnameArr.join('/');
                 }
                 text.get(url, function (content) {
                     text.finishLoad(name, parsed.strip, content, onLoad);
