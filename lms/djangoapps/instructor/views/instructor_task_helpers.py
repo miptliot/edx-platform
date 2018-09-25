@@ -58,11 +58,13 @@ def extract_email_features(email_task):
 
     email = CourseEmail.objects.get(id=task_input_information['email_id'])
     email_delay = email.get_delay()
+    section_release = email.get_section_release()
     email_feature_dict = {
         'created': get_default_time_display(email.created),
         'sent_to': [target.long_display() for target in email.targets.all()],
         'requester': str(email_task.requester),
-        'delay_time': get_default_time_display(email_delay.when) if email_delay else None
+        'delay_time': get_default_time_display(email_delay.when) if email_delay else None,
+        'block_id': section_release.usage_key if section_release else None
     }
     features = ['subject', 'html_message', 'id']
     email_info = {feature: unicode(getattr(email, feature)) for feature in features}

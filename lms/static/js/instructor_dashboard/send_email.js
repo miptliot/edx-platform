@@ -49,6 +49,8 @@
             this.$subject = this.$container.find("input[name='subject']");
             this.$checkbox_send_in_future = this.$container.find("input[name='send_in_future']");
             this.$datetime_when_to_send = this.$container.find(".datetime_when_to_send");
+            this.$chapter_release = this.$container.find(".chapter_release");
+            this.$chapter_release_loading = this.$container.find('.mail_loading');
             this.$date_when_to_send = this.$container.find("input[name='date_when_to_send']");
             this.$time_when_to_send = this.$container.find("input[name='time_when_to_send']");
             this.$btn_send = this.$container.find("input[name='send']");
@@ -68,8 +70,10 @@
             this.$email_messages_wrapper = this.$container.find('.email-messages-wrapper');
             this.$checkbox_send_in_future.click(function() {
                 if($(this).is(":checked")) {
+                    $(sendemail.$chapter_release).attr('disabled', 'disabled');
                     $(sendemail.$datetime_when_to_send).removeClass('hidden');
                 } else {
+                    $(sendemail.$chapter_release).removeAttr('disabled');
                     $(sendemail.$datetime_when_to_send).addClass('hidden');
                 }
             });
@@ -167,22 +171,25 @@
                             send_to: JSON.stringify(targets),
                             subject: subject,
                             message: body,
-                            send_in_future: sentInFuture
+                            send_in_future: sentInFuture,
+                            release_block: $(sendemail.$chapter_release).val()
                         };
                         return $.ajax({
                             type: 'POST',
                             dataType: 'json',
                             url: sendemail.$btn_send.data('endpoint'),
                             data: sendData,
-                            success: function() {
-                                return sendemail.display_response(successMessage);
+                            success: function(data) {
+                                $("html, body").animate({ scrollTop: 0 }, "slow");
+                                return sendemail.display_response(data.msg ? data.msg : successMessage);
                             },
                             error: statusAjaxError(function() {
+                                $("html, body").animate({ scrollTop: 0 }, "slow");
                                 return sendemail.fail_with_error(gettext('Error sending email.'));
                             })
                         });
                     } else {
-                        sendemail.task_response.empty();
+                        sendemail.$task_response.empty();
                         return sendemail.$request_response_error.empty();
                     }
                 }
@@ -302,6 +309,61 @@
                     })
                 });
             });
+
+            var clearSendToCheckboxes = function() {
+                sendemail.$container.find("input[name='send_to']:checkbox").removeAttr('checked');
+            };
+
+            var setSendToCheckboxes = function(items) {
+                sendemail.$container.find("input[name='send_to']:checkbox").each(function(index, el) {
+                    if (items.indexOf($(el).attr('value')) !== -1) {
+                        $(el).attr('checked', 'checked');
+                    } else {
+                        $(el).removeAttr('checked');
+                    }
+                });
+            };
+
+            var setFormFields = function(subject, htmlMessage, targets) {
+                var editor;
+                editor = tinyMCE.get('mce_0');
+                editor.setContent(htmlMessage);
+                $('#id_subject').val(subject);
+                if (targets.length > 0) {
+                    setSendToCheckboxes(targets);
+                } else {
+                    clearSendToCheckboxes();
+                }
+            };
+
+            var updateChapterRelease = function() {
+                var val = $(sendemail.$chapter_release).val();
+                if (val) {
+                    $(sendemail.$checkbox_send_in_future).attr('disabled', 'disabled');
+                    $(sendemail.$chapter_release_loading).html(gettext('Try to load email template...'));
+                    $.ajax({
+                        type: 'GET',
+                        dataType: 'json',
+                        url: $(sendemail.$chapter_release).data('email'),
+                        data: {
+                            'usage_key': val
+                        },
+                        success: function(data) {
+                            if (data.exists) {
+                                setFormFields(data.data.subject, data.data.html_message, data.data.targets);
+                            } else {
+                                setFormFields('', '', []);
+                            }
+                            $(sendemail.$chapter_release_loading).html('');
+                        }
+                    });
+                } else {
+                    $(sendemail.$checkbox_send_in_future).removeAttr('disabled');
+                    $(sendemail.$chapter_release_loading).html('');
+                    setFormFields('', '', []);
+                }
+            };
+
             this.$send_to.change(function() {
                 var targets;
                 var inputDisable = function() {
@@ -326,6 +388,13 @@
                 });
                 return $('.send_to_list').text(gettext('Send to:') + ' ' + targets.join(', '));
             });
+
+            this.$chapter_release.change(updateChapterRelease);
+
+            var chapterRelease = $(sendemail.$chapter_release).val();
+            if (chapterRelease) {
+                updateChapterRelease();
+            }
         }
 
         SendEmail.prototype.fail_with_error = function(msg) {

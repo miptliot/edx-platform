@@ -6,12 +6,15 @@ already been submitted, filtered either by running state or input
 arguments.
 
 """
+import datetime
 import hashlib
+import json
+import logging
 from collections import Counter
 
 from celery.states import READY_STATES
-
-from bulk_email.models import CourseEmail
+from django.utils.translation import ugettext as _
+from bulk_email.models import CourseEmail, CourseEmailDelay, CourseEmailSendOnSectionRelease
 from certificates.models import CertificateGenerationHistory
 from lms.djangoapps.instructor_task.api_helper import (
     check_arguments_for_rescoring,
@@ -39,8 +42,17 @@ from lms.djangoapps.instructor_task.tasks import (
     reset_problem_attempts,
     send_bulk_course_email
 )
+from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from util import milestones_helpers
+from opaque_keys.edx.keys import CourseKey
+from xmodule.course_module import DEFAULT_START_DATE
+from xmodule.modulestore import ModuleStoreEnum
 from xmodule.modulestore.django import modulestore
+from dateutil.tz import tzutc
+
+
+log = logging.getLogger(__name__)
 
 
 class SpecificStudentIdMissingError(Exception):
@@ -518,3 +530,233 @@ def regenerate_certificates(request, course_key, statuses_to_regenerate):
     )
 
     return instructor_task
+
+
+def remove_scheduled_email(msg_id, course_id):
+    result = True
+    error = ''
+    email_removed = False
+
+    try:
+        email = CourseEmail.objects.get(pk=msg_id)
+        if email.has_delay():
+            task_type = 'bulk_course_email'
+            tasks = get_instructor_task_history(course_id, task_type=task_type)
+            task_found = False
+            for email_task in tasks:
+                task_email_id = None
+                try:
+                    task_input_information = json.loads(email_task.task_input)
+                    task_email_id = int(task_input_information['email_id'])
+                except ValueError:
+                    pass
+                if msg_id == task_email_id:
+                    task_found = True
+                    email_task.delete()
+                    break
+            if task_found:
+                if email.has_section_release():
+                    email.section_release.removed = True
+                    email.section_release.save()
+                    email.delay.delete()
+                else:
+                    email.delete()
+                email_removed = True
+            else:
+                result, error = False, _("Task to send email doesn't exists")
+        else:
+            result, error = False, _("Email was already sent")
+
+        if not email_removed:
+            email.delete()
+    except CourseEmail.DoesNotExist:
+        result, error = False, _("Email was not found")
+
+    return result, error
+
+
+class DummyRequest(object):
+
+    def __init__(self, user):
+        self.user = user
+        self.META = {'REMOTE_ADDR': '0:0:0:0', 'SERVER_NAME': 'dummy_host'}
+
+    def get_host(self):
+        return "dummy_host"
+
+    def is_secure(self):
+        return False
+
+
+def _clone_email_after_rerun(course_id, usage_key, source_email, default_start_datetime):
+    log.info('Try to clone email ID=%s for course=%s and block=%s'
+             % (str(source_email.id), str(course_id), str(usage_key)))
+
+    can_send_email = True
+    email_section_release = None
+    new_email = None
+
+    course_overview = CourseOverview.get_from_id(course_id)
+    from_addr = configuration_helpers.get_value('course_email_from_addr')
+    if isinstance(from_addr, dict):
+        from_addr = from_addr.get(course_overview.display_org_with_default)
+
+    template_name = configuration_helpers.get_value('course_email_template_name')
+    if isinstance(template_name, dict):
+        template_name = template_name.get(course_overview.display_org_with_default)
+
+    post_data_parsed = json.loads(source_email.section_release.post_data)
+    targets = [t for t in post_data_parsed['targets'] if not t.startswith('cohort:')]
+    if not targets:
+        can_send_email = False
+
+    try:
+        new_email = CourseEmail.create(
+            course_id,
+            source_email.sender,
+            targets,
+            post_data_parsed['subject'],
+            post_data_parsed['message'],
+            template_name=template_name,
+            from_addr=from_addr
+        )
+
+        email_section_release = CourseEmailSendOnSectionRelease(
+            course_email=new_email,
+            usage_key=str(usage_key),
+            start_datetime=default_start_datetime,
+            version_uuid=source_email.section_release.version_uuid,
+            post_data=source_email.section_release.post_data
+        )
+        email_section_release.save()
+
+    except ValueError as err:
+        can_send_email = False
+        log.exception(u'Cannot clone course email for course %s (source email id: %s)',
+                      course_id, str(source_email.id))
+    return can_send_email, new_email, email_section_release
+
+
+def _reschedule_email(email, course_key, new_start_datetime=None):
+    dt_now = datetime.datetime.now(tzutc())
+    when = new_start_datetime if new_start_datetime is not None else dt_now
+
+    log.info('Try to reschedule email ID=%s for course=%s, new send datetime: %s'
+             % (str(email.id), str(course_key), str(when)))
+
+    task_type = 'bulk_course_email'
+    tasks = get_instructor_task_history(course_key, task_type=task_type)
+    for email_task in tasks:
+        task_email_id = None
+        try:
+            task_input_information = json.loads(email_task.task_input)
+            task_email_id = int(task_input_information['email_id'])
+        except ValueError:
+            pass
+        if email.id == task_email_id:
+            email_task.delete()
+            break
+
+    if email.has_delay():
+        email.delay.when = when
+        email.delay.save()
+    else:
+        email_delay = CourseEmailDelay(course_email=email, when=when)
+        email_delay.save()
+
+    email.section_release.start_datetime = when
+    email.section_release.save()
+
+    countdown = None
+    if new_start_datetime:
+        dt_diff = new_start_datetime - dt_now
+        countdown = int(dt_diff.total_seconds())
+
+    submit_bulk_course_email(DummyRequest(email.sender), course_key, email.id, countdown=countdown)
+
+
+def change_bulk_mailing(course_key):
+    course_key = CourseKey.from_string(course_key)
+    dt_now = datetime.datetime.now(tzutc())
+
+    block_ids_dict = {}
+    source_emails_ids = []
+    course_start_date = None
+
+    with modulestore().branch_setting(ModuleStoreEnum.Branch.draft_preferred):
+        course = modulestore().get_course(course_key, depth=0)
+        course_start_date = course.start
+
+        chapter_blocks = modulestore().get_items(course_key, qualifiers={'category': 'chapter'})
+        for block in chapter_blocks:
+            if block.email_source_block_id:
+                block_ids_dict[str(block.location)] = {
+                    'location': block.location,
+                    'start': block.start,
+                    'source_id': block.email_source_block_id,
+                    'version_uuid': block.email_version_uuid,
+                    'key': block.email_source_block_id + '|' + block.email_version_uuid
+                }
+                source_emails_ids.append(block.email_source_block_id)
+
+    source_emails_data = CourseEmailSendOnSectionRelease.objects\
+        .filter(usage_key__in=source_emails_ids).select_related('course_email')
+    source_emails = {}  # emails from the current course and other courses (connected with the current)
+    for con_email in source_emails_data:
+        source_emails[con_email.usage_key + '|' + con_email.version_uuid] = con_email.course_email
+
+    course_emails_data = CourseEmailSendOnSectionRelease.objects\
+        .filter(course_email__course_id=course_key).select_related('course_email')
+    course_emails = {}  # emails from the current course only
+    for email in course_emails_data:
+        course_emails[email.usage_key + '|' + email.version_uuid] = email.course_email
+
+    for block_id, block_info in block_ids_dict.items():
+        course_block_id = block_id + '|' + block_info['version_uuid']
+        course_email = course_emails.get(course_block_id, None)
+        source_email = source_emails.get(block_info['key'], None)
+        block_start_dt = max(course_start_date, block_info['start'])
+
+        # create new email in case of new course (course re-run or import)
+        if block_id != block_info['source_id'] and source_email and not course_email:
+            can_send_email, new_email, section_release = _clone_email_after_rerun(course_key, block_info['location'],
+                                                                                  source_email, block_start_dt)
+            # schedule sending email only if start date of block (or course) is in future
+            # and source email was not removed
+            # (should works only in case of import new course and start date of the new course is in future)
+            if can_send_email and block_start_dt != DEFAULT_START_DATE and block_start_dt > dt_now\
+                    and not source_email.section_release.removed:
+                request = DummyRequest(source_email.sender)
+                dt_diff = block_start_dt - dt_now
+                countdown = int(dt_diff.total_seconds())
+
+                if countdown >= 0:
+                    dt_in_future = new_email.created + datetime.timedelta(seconds=countdown)
+                    log.info('Try to schedule sending email [ID=%s] immediately after clone: %s'
+                             % (str(new_email.id), str(dt_in_future)))
+                    email_delay = CourseEmailDelay(course_email=new_email, when=dt_in_future)
+                    email_delay.save()
+
+                submit_bulk_course_email(request, course_key, new_email.id, countdown=countdown)
+
+        # start date of block (or course) was changed in studio
+        # reschedule sending email only in case it was not removed and not sent
+        elif course_email and block_start_dt != DEFAULT_START_DATE\
+                and block_start_dt != course_email.section_release.start_datetime\
+                and not course_email.section_release.removed \
+                and not course_email.section_release.sent:
+
+            if block_start_dt > dt_now:
+                if course_email.section_release.start_datetime > dt_now:
+                    # just reschedule email
+                    _reschedule_email(course_email, course_key, block_start_dt)
+                else:
+                    # do nothing because this should be already sent
+                    pass
+            elif block_start_dt <= dt_now:
+                if course_email.section_release.start_datetime > dt_now:
+                    # send email right now
+                    _reschedule_email(course_email, course_key)
+                else:
+                    # do nothing because this should be already sent
+                    pass

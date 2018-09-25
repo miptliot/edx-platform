@@ -3,6 +3,7 @@
 import logging
 from datetime import datetime
 
+from django.conf import settings
 from django.dispatch import receiver
 from pytz import UTC
 
@@ -47,6 +48,12 @@ def listen_for_course_publish(sender, course_key, **kwargs):  # pylint: disable=
         from contentstore.tasks import update_search_index
 
         update_search_index.delay(unicode(course_key), datetime.now(UTC).isoformat())
+
+    if not settings.DEBUG:
+        course = modulestore().get_course(course_key)
+        if course.auto_change_bulk_mailing:
+            from lms.djangoapps.instructor.handlers import change_bulk_mailing_handler
+            change_bulk_mailing_handler.apply_async(course_key=course_key,)
 
 
 @receiver(SignalHandler.library_updated)

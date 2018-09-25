@@ -6,6 +6,7 @@ import json
 import logging
 import random
 import string  # pylint: disable=deprecated-module
+import urllib
 
 import django.utils
 import six
@@ -20,7 +21,7 @@ from django.utils.translation import ugettext as _
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_http_methods
 from opaque_keys import InvalidKeyError
-from opaque_keys.edx.keys import CourseKey
+from opaque_keys.edx.keys import CourseKey, UsageKey
 from opaque_keys.edx.locations import Location
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangoapps.waffle_utils import WaffleSwitchNamespace
@@ -100,7 +101,7 @@ __all__ = ['course_info_handler', 'course_handler', 'course_listing',
            'advanced_settings_handler',
            'course_notifications_handler',
            'textbooks_list_handler', 'textbooks_detail_handler',
-           'group_configurations_list_handler', 'group_configurations_detail_handler']
+           'group_configurations_list_handler', 'group_configurations_detail_handler', 'configure_chapter_email']
 
 WAFFLE_NAMESPACE = 'studio_home'
 
@@ -1677,3 +1678,18 @@ def _get_course_creator_status(user):
         course_creator_status = 'granted'
 
     return course_creator_status
+
+
+def configure_chapter_email(request, usage_key_string):
+    usage_key = UsageKey.from_string(usage_key_string)
+    try:
+        item = modulestore().get_item(usage_key)
+    except ItemNotFoundError:
+        return HttpResponseNotFound()
+    if item.category != 'chapter':
+        return HttpResponseBadRequest()
+
+    scheme = request.is_secure() and "https" or "http"
+    query_params = 'chapter_key=' + urllib.quote_plus(usage_key_string) + '#view-send_email'
+    url = scheme + '://' + settings.LMS_BASE + '/courses/' + str(usage_key.course_key) + '/instructor?' + query_params
+    return redirect(url)

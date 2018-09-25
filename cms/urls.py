@@ -84,6 +84,9 @@ urlpatterns += patterns(
         'course_info_update_handler'
     ),
     url(r'^home/?$', 'course_listing', name='home'),
+    url(r'^configure-chapter-email/{}$'.format(settings.USAGE_KEY_PATTERN),
+        'configure_chapter_email',
+        name='configure_chapter_email'),
     url(
         r'^course/{}/search_reindex?$'.format(settings.COURSE_KEY_PATTERN),
         'course_search_index_handler',

@@ -8,6 +8,22 @@ from openedx.core.djangolib.markup import HTML
     <div class="request-response msg msg-confirm copy" id="request-response"></div>
     <ul class="list-fields">
         <li class="field">
+            <label>
+                ${_("Send on chapter release: ")}
+                <br/>
+                <select class="chapter_release" name="chapter_release" data-email="${ section_data['get_section_email_url'] }">
+                    %for chapter in section_data['chapter_blocks_lst']:
+                        <option value="${chapter['usage_key']}"
+                        %if chapter['usage_key'] == section_data['selected_chapter_block']:
+                                selected="selected"
+                        %endif
+                        >${chapter['title']} ${chapter['start_date']}</option>
+                    %endfor
+                </select>
+                <span class="mail_loading tip"></span>
+            </label>
+        </li>
+        <li class="field">
             <div class="send_to_list">${_("Send to:")}</div>
         </li>
         <li class="field">
@@ -95,7 +111,6 @@ from openedx.core.djangolib.markup import HTML
                     </tr>
                 </table>
             </div>
-
         </li>
     </ul>
     <div class="submit-email-action">

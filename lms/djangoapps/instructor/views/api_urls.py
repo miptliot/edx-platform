@@ -73,6 +73,8 @@ urlpatterns = patterns(
         'lms.djangoapps.instructor.views.api.list_scheduled_emails', name="list_scheduled_emails"),
     url(r'^remove_scheduled_email',
         'lms.djangoapps.instructor.views.api.remove_scheduled_email', name="remove_scheduled_email"),
+    url(r'^get_section_email',
+        'lms.djangoapps.instructor.views.api.get_section_email', name="get_section_email"),
     url(r'^list_forum_members$',
         'lms.djangoapps.instructor.views.api.list_forum_members', name="list_forum_members"),
     url(r'^update_forum_role_membership$',

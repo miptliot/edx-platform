@@ -281,6 +281,14 @@
                 cssClass: 'email-content-cell',
                 formatter: unknownIfNullFormatter
             }, {
+                id: 'block',
+                field: 'block',
+                name: gettext('Related Chapter'),
+                minWidth: 80,
+                maxWidth: 100,
+                cssClass: 'email-content-cell',
+                formatter: unknownIfNullFormatter
+            }, {
                 id: 'sent_to',
                 field: 'sent_to',
                 name: gettext('Sent To'),

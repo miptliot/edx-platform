@@ -121,6 +121,14 @@ if (is_proctored_exam) {
                         </a>
                     </li>
                 <% } %>
+                <% if (xblockInfo.isChapter()) { %>
+                     <li class="action-item action-email-on-chapter-start">
+                         <a href="/configure-chapter-email/<%- xblockInfo.get('id') %>" target="_blank" data-tooltip="<%- gettext('Configure email on chapter release') %>" class="email-on-chapter-release-button action-button">
+                             <span class="icon fa fa-envelope-square" aria-hidden="true"></span>
+                             <span class="sr action-button-text"><%- gettext('Configure email on chapter release') %></span>
+                         </a>
+                     </li>
+                 <% } %>
                 <% if (xblockInfo.isEditableOnCourseOutline()) { %>
                     <li class="action-item action-configure">
                         <a href="#" data-tooltip="<%- gettext('Configure') %>" class="configure-button action-button">

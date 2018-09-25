@@ -288,8 +288,9 @@ class CourseEmail(Email):
             from_addr=from_addr,
         )
         course_email.save()  # Must exist in db before setting M2M relationship values
-        course_email.targets.add(*new_targets)
-        course_email.save()
+        if new_targets:
+            course_email.targets.add(*new_targets)
+            course_email.save()
 
         return course_email
 
@@ -307,6 +308,15 @@ class CourseEmail(Email):
 
     def has_delay(self):
         return True if self.get_delay() else False
+
+    def get_section_release(self):
+        try:
+            return self.section_release
+        except CourseEmailSendOnSectionRelease.DoesNotExist:
+            return None
+
+    def has_section_release(self):
+        return True if self.get_section_release() else False
 
 
 class Optout(models.Model):
@@ -497,3 +507,17 @@ class CourseEmailDelay(models.Model):
     course_email = models.OneToOneField(CourseEmail, primary_key=True,
                                         related_name="delay")
     when = models.DateTimeField()
+
+
+class CourseEmailSendOnSectionRelease(models.Model):
+    class Meta(object):
+        app_label = "bulk_email"
+
+    course_email = models.OneToOneField(CourseEmail, primary_key=True,
+                                        related_name="section_release")
+    usage_key = models.CharField(null=False, max_length=255, db_index=True)
+    version_uuid = models.CharField(null=False, max_length=255)
+    start_datetime = models.DateTimeField(null=True)
+    removed = models.BooleanField(default=False)
+    sent = models.BooleanField(default=False)
+    post_data = models.TextField(null=True, blank=True, default="{}")

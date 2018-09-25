@@ -148,6 +148,9 @@ def perform_delegate_email_batches(entry_id, course_id, task_input, action_name)
         delay = email_obj.get_delay()
         if delay:
             email_obj.delay.delete()
+        if email_obj.has_section_release():
+            email_obj.section_release.sent = True
+            email_obj.section_release.save()
     except CourseEmail.DoesNotExist:
         # The CourseEmail object should be committed in the view function before the task
         # is submitted and reaches this point.

@@ -54,6 +54,8 @@ from student.roles import CourseFinanceAdminRole, CourseSalesAdminRole
 from util.json_request import JsonResponse
 from xmodule.html_module import HtmlDescriptor
 from xmodule.modulestore.django import modulestore
+from xmodule.modulestore import ModuleStoreEnum
+from xmodule.course_module import DEFAULT_START_DATE
 from xmodule.tabs import CourseTab
 
 from .tools import get_units_with_due_date, title_or_url
@@ -162,7 +164,7 @@ def instructor_dashboard_2(request, course_id):
 
     # Gate access to course email by feature flag & by course-specific authorization
     if BulkEmailFlag.feature_enabled(course_key):
-        sections.append(_section_send_email(course, access))
+        sections.append(_section_send_email(course, access, request))
 
     # Gate access to Metrics tab by featue flag and staff authorization
     if settings.FEATURES['CLASS_DASHBOARD'] and access['staff']:
@@ -640,9 +642,37 @@ def null_applicable_aside_types(block):  # pylint: disable=unused-argument
     return []
 
 
-def _section_send_email(course, access):
+def _section_send_email(course, access, request):
     """ Provide data for the corresponding bulk email section """
     course_key = course.id
+
+    with modulestore().branch_setting(ModuleStoreEnum.Branch.draft_preferred):
+        course = modulestore().get_course(course_key, depth=0)
+        course_start_date = course.start
+
+        chapter_blocks = modulestore().get_items(
+            course_key, qualifiers={'category': 'chapter'}
+        )
+        chapter_blocks_lst = []
+        for c in chapter_blocks:
+            start_date = 'Unscheduled'
+            tmp_start_date = max(course_start_date, c.start)
+            if tmp_start_date != DEFAULT_START_DATE:
+                start_date = tmp_start_date.strftime("%Y-%m-%d %H:%M")
+            chapter_blocks_lst.append({
+                'title': c.display_name,
+                'key': c.location.block_id,
+                'usage_key': str(c.location),
+                'start_date': '[ ' + start_date + ' ]'
+            })
+
+    chapter_blocks_lst = sorted(chapter_blocks_lst, key=lambda k: k['title'])
+    chapter_blocks_lst = [{
+        'title': _('Not selected'),
+        'key': '',
+        'usage_key': '',
+        'start_date': ''
+    }] + chapter_blocks_lst
 
     # Monkey-patch applicable_aside_types to return no asides for the duration of this render
     with patch.object(course.runtime, 'applicable_aside_types', null_applicable_aside_types):
@@ -692,6 +722,11 @@ def _section_send_email(course, access):
         'email_remove_scheduled_url': reverse(
             'remove_scheduled_email', kwargs={'course_id': unicode(course_key)}
         ),
+        'chapter_blocks_lst': chapter_blocks_lst,
+        'selected_chapter_block': request.GET.get('chapter_key', ''),
+        'get_section_email_url': reverse(
+            'get_section_email', kwargs={'course_id': unicode(course_key)}
+        )
     }
     return section_data
 

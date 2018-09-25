@@ -171,6 +171,20 @@ class ProctoringFields(object):
             return None
 
 
+class MailingFields(object):
+
+    email_source_block_id = String(
+        help=_("Usage key where mail template should be taken"),
+        default='',
+        scope=Scope.settings,
+    )
+    email_version_uuid = String(
+        help=_("Version of email"),
+        default='',
+        scope=Scope.settings,
+    )
+
+
 @XBlock.wants('proctoring')
 @XBlock.wants('verification')
 @XBlock.wants('milestones')
@@ -543,7 +557,7 @@ class SequenceModule(SequenceFields, ProctoringFields, XModule):
         return new_class
 
 
-class SequenceDescriptor(SequenceFields, ProctoringFields, MakoModuleDescriptor, XmlDescriptor):
+class SequenceDescriptor(SequenceFields, ProctoringFields, MailingFields, MakoModuleDescriptor, XmlDescriptor):
     """
     A Sequence's Descriptor object
     """

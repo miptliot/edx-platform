@@ -15,6 +15,7 @@ import string
 import StringIO
 import time
 import datetime
+import uuid
 
 import unicodecsv
 from django.conf import settings
@@ -34,13 +35,14 @@ from django.views.decorators.http import require_http_methods, require_POST
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey, UsageKey
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
+from dateutil.tz import tzutc
 
 import instructor_analytics.basic
 import instructor_analytics.csvs
 import instructor_analytics.distributions
 import lms.djangoapps.instructor.enrollment as enrollment
 import lms.djangoapps.instructor_task.api
-from bulk_email.models import BulkEmailFlag, CourseEmail, CourseEmailDelay
+from bulk_email.models import BulkEmailFlag, CourseEmail, CourseEmailDelay, CourseEmailSendOnSectionRelease
 from certificates import api as certs_api
 from certificates.models import CertificateInvalidation, CertificateStatuses, CertificateWhitelist, GeneratedCertificate
 from courseware.access import has_access
@@ -67,6 +69,10 @@ from openedx.core.djangoapps.course_groups.cohorts import is_course_cohorted
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.djangoapps.user_api.preferences.api import get_user_preference, set_user_preference
 from openedx.core.djangolib.markup import HTML, Text
+from xmodule.modulestore import ModuleStoreEnum
+from xmodule.modulestore.django import modulestore
+from xmodule.modulestore.exceptions import ItemNotFoundError
+from xmodule.course_module import DEFAULT_START_DATE
 from shoppingcart.models import (
     Coupon,
     CourseMode,
@@ -2254,9 +2260,23 @@ def list_email_content(request, course_id):  # pylint: disable=unused-argument
 @require_level('staff')
 def list_scheduled_emails(request, course_id):
     course_id = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+
+    chapter_blocks = modulestore().get_items(course_id, qualifiers={'category': 'chapter'})
+    blocks_dict = {}
+    for chapter in chapter_blocks:
+        blocks_dict[str(chapter.location)] = chapter.display_name
+
     task_type = 'bulk_course_email'
     emails = lms.djangoapps.instructor_task.api.get_instructor_task_history(course_id, task_type=task_type)
-    data = [item for item in map(extract_email_features, emails) if item['delay_time']]
+    tmp_data = [item for item in map(extract_email_features, emails) if item['delay_time']]
+    data = []
+    for val in tmp_data:
+        block_id = val['block_id']
+        if block_id and block_id in blocks_dict:
+            val['block'] = blocks_dict[block_id]
+        else:
+            val['block'] = ''
+        data.append(val)
 
     response_payload = {
         'emails': data,
@@ -2269,9 +2289,6 @@ def list_scheduled_emails(request, course_id):
 @cache_control(no_cache=True, no_store=True, must_revalidate=True)
 @require_level('staff')
 def remove_scheduled_email(request, course_id):
-    result = True
-    error = ''
-
     course_id = SlashSeparatedCourseKey.from_deprecated_string(course_id)
     msg_id = request.POST.get('msg-id', None)
     try:
@@ -2282,37 +2299,52 @@ def remove_scheduled_email(request, course_id):
     if not msg_id:
         result, error = False, _("Invalid email ID")
     else:
-        try:
-            email = CourseEmail.objects.get(pk=msg_id)
-            if email.has_delay():
-                task_type = 'bulk_course_email'
-                tasks = lms.djangoapps.instructor_task.api.get_instructor_task_history(course_id, task_type=task_type)
-                task_found = False
-                for email_task in tasks:
-                    task_email_id = None
-                    try:
-                        task_input_information = json.loads(email_task.task_input)
-                        task_email_id = int(task_input_information['email_id'])
-                    except ValueError:
-                        pass
-                    if msg_id == task_email_id:
-                        task_found = True
-                        email_task.delete()
-                        break
-                if task_found:
-                    email.delete()
-                else:
-                    result, error = False, _("Task to send email doesn't exists")
-            else:
-                result, error = False, _("Email was already sent")
-        except CourseEmail.DoesNotExist:
-            result, error = False, _("Email was not found")
+        result, error = lms.djangoapps.instructor_task.api.remove_scheduled_email(msg_id, course_id)
 
     response_payload = {
         'success': result,
         'error': error
     }
     return JsonResponse(response_payload)
+
+
+@ensure_csrf_cookie
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+@require_level('staff')
+def get_section_email(request, course_id):
+    usage_key_param = request.GET.get('usage_key', None)
+    usage_key = None
+    if usage_key_param:
+        try:
+            usage_key = UsageKey.from_string(usage_key_param)
+        except:
+            pass
+        if usage_key:
+            try:
+                with modulestore().branch_setting(ModuleStoreEnum.Branch.draft_preferred):
+                    item = modulestore().get_item(usage_key)
+                    if item and item.email_source_block_id:
+                        section_release = CourseEmailSendOnSectionRelease.objects.get(
+                            usage_key=item.email_source_block_id,
+                            version_uuid=item.email_version_uuid
+                        )
+                        course_email = section_release.course_email
+                        targets = [t.target_type for t in course_email.targets.all()]
+                        response_payload = {
+                            'data': {
+                                'subject': course_email.subject,
+                                'html_message': course_email.html_message,
+                                'targets': targets
+                            },
+                            'exists': True
+                        }
+                        return JsonResponse(response_payload)
+            except CourseEmailSendOnSectionRelease.DoesNotExist:
+                pass
+            except ItemNotFoundError:
+                pass
+
+    return JsonResponse({'data': None, 'exists': False})
 
 
 @require_POST
@@ -2600,6 +2632,7 @@ def send_email(request, course_id):
     - 'message' specifies email's content
     """
     course_id = CourseKey.from_string(course_id)
+    course = modulestore().get_course(course_id)
 
     if not BulkEmailFlag.feature_enabled(course_id):
         log.warning(u'Email is not enabled for course %s', course_id)
@@ -2609,13 +2642,27 @@ def send_email(request, course_id):
     subject = request.POST.get("subject")
     message = request.POST.get("message")
     countdown = request.POST.get("send_in_future", None)
+    release_block = request.POST.get("release_block", None)
 
-    try:
-        countdown = int(countdown)
-        if countdown <= 0:
+    add_task = True
+    usage_key = None
+    msg = ''
+
+    # Send on chapter release
+    if release_block:
+        try:
+            usage_key = UsageKey.from_string(release_block)
             countdown = None
-    except ValueError:
-        countdown = None
+        except:
+            pass
+    # otherwise
+    else:
+        try:
+            countdown = int(countdown)
+            if countdown <= 0:
+                countdown = None
+        except ValueError:
+            countdown = None
 
     # allow two branding points to come from Site Configuration: which CourseEmailTemplate should be used
     # and what the 'from' field in the email should be
@@ -2651,6 +2698,18 @@ def send_email(request, course_id):
             template_name=template_name,
             from_addr=from_addr
         )
+
+        if usage_key:
+            post_data = {
+                'targets': targets,
+                'subject': subject,
+                'message': message
+            }
+            countdown, msg = _connect_new_email_with_section(request, usage_key, course, course_id, email, post_data)
+            if countdown < 0:
+                countdown = None
+                add_task = False
+
         if countdown:
             dt_in_future = email.created + datetime.timedelta(seconds=countdown)
             email_delay = CourseEmailDelay(course_email=email, when=dt_in_future)
@@ -2662,13 +2721,87 @@ def send_email(request, course_id):
         return HttpResponseBadRequest(repr(err))
 
     # Submit the task, so that the correct InstructorTask object gets created (for monitoring purposes)
-    lms.djangoapps.instructor_task.api.submit_bulk_course_email(request, course_id, email.id, countdown=countdown)
+    if add_task:
+        lms.djangoapps.instructor_task.api.submit_bulk_course_email(request, course_id, email.id, countdown=countdown)
 
     response_payload = {
         'course_id': course_id.to_deprecated_string(),
         'success': True,
+        'msg': msg
     }
     return JsonResponse(response_payload)
+
+
+def _connect_new_email_with_section(request, usage_key, course, course_id, new_email, post_data):
+    countdown = -1
+    dt_now = datetime.datetime.now(tzutc())
+    start_datetime = None
+    new_uuid = str(uuid.uuid4())
+
+    with modulestore().branch_setting(ModuleStoreEnum.Branch.draft_preferred):
+        draft_course = modulestore().get_course(course_id, depth=0)
+        course_start_date = draft_course.start
+
+        draft_item = modulestore().get_item(usage_key)
+        start_datetime = max(course_start_date, draft_item.start)
+
+        # check that email could be sent
+
+        if draft_item.start == DEFAULT_START_DATE:
+            msg = _('New email for chosen section was saved but not sent because start date of the section is not set. ')
+        elif course_start_date == DEFAULT_START_DATE:
+            msg = _('New email for chosen section was saved but not sent because start date of the course is not set. ')
+        elif start_datetime > dt_now:
+            dt_diff = start_datetime - dt_now
+            countdown = int(dt_diff.total_seconds())
+            dt_tmp = start_datetime.strftime("%Y-%m-%d %H:%M") + ' UTC'
+            msg = _('Your email message was successfully queued for sending. '
+                    'It will be sent: {date}').format(date=dt_tmp)
+        else:
+            msg = ''
+            countdown = 0  # send right now
+            start_datetime = dt_now
+
+        # cancel previous scheduled task and remove email
+
+        if draft_item.email_version_uuid:
+            try:
+                section_release = CourseEmailSendOnSectionRelease.objects.get(
+                    usage_key=str(usage_key),
+                    version_uuid=draft_item.email_version_uuid)
+                if not section_release.removed:
+                    mail_id = section_release.course_email.id
+                    result, error = lms.djangoapps.instructor_task.api.remove_scheduled_email(mail_id, course_id)
+                    if result:
+                        msg = _('Sending previous scheduled email was canceled. ') + msg
+            except CourseEmailSendOnSectionRelease.DoesNotExist:
+                pass
+
+        # connect new email with section
+
+        email_section_release = CourseEmailSendOnSectionRelease(
+            course_email=new_email,
+            usage_key=str(usage_key),
+            start_datetime=start_datetime,
+            version_uuid=new_uuid,
+            post_data=json.dumps(post_data)
+        )
+        email_section_release.save()
+
+        # update draft block in Mongo
+
+        draft_item.email_source_block_id = str(draft_item.location)
+        draft_item.email_version_uuid = new_uuid
+        modulestore().update_item(draft_item, request.user.id)
+
+    # update published block in Mongo
+
+    published_item = modulestore().get_item(usage_key)
+    published_item.email_source_block_id = str(published_item.location)
+    published_item.email_version_uuid = new_uuid
+    modulestore().update_item(published_item, request.user.id)
+
+    return countdown, msg
 
 
 @require_POST
