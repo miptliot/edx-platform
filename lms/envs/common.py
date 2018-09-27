@@ -1257,6 +1257,7 @@ proctoring_js = (
         'proctoring/js/views/Backbone.ModalDialog.js',
         'proctoring/js/views/proctored_exam_add_allowance_view.js',
         'proctoring/js/views/proctored_exam_allowance_view.js',
+        'proctoring/js/views/proctored_exam_suspicious_monitor.js',
         'proctoring/js/views/proctored_exam_attempt_view.js',
         'proctoring/js/views/proctored_exam_view.js'
     ] +

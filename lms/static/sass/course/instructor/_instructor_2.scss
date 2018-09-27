@@ -2137,7 +2137,7 @@ input[name="subject"] {
     }
   }
 }
-.special-allowance-container, .student-proctored-exam-container{
+.special-allowance-container, .student-proctored-exam-container, .suspicious-monitor-container{
   .allowance-table, .exam-attempts-table {
     width: 100%;
     tr:nth-child(even){
@@ -2185,6 +2185,10 @@ input[name="subject"] {
         &.email {
           @include text-align(center);
           width: ($baseline*8);
+          word-wrap: break-word;
+        }
+        &.sessions {
+          @include text-align(center);
           word-wrap: break-word;
         }
         &.allowance-name {
