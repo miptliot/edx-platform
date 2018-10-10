@@ -71,7 +71,7 @@ class WeightedAssignmentFormatGrader(CourseGrader):
             Calculates total score for a section while dropping lowest scores
             """
             # Create an array of tuples with (index, mark), sorted by mark['percent'] descending
-            sorted_breakdown = sorted(enumerate(breakdown), key=lambda x: -x[1]['percent'] * x[1]['weight'])
+            sorted_breakdown = sorted(enumerate(breakdown), key=lambda x: (-x[1].get('percent', 0.0)) * (x[1].get('weight', 1.0) or 1.0))
             # A list of the indices of the dropped scores
             dropped_indices = []
             dropped_breakdown = []
@@ -82,13 +82,13 @@ class WeightedAssignmentFormatGrader(CourseGrader):
             # Calculate normalized_weight for breakdown
             normalized_weight = 0
             if breakdown:
-                normalized_weight = sum(x.get('weight', 1) for x in breakdown)
+                normalized_weight = sum((x.get('weight', 1) or 1.0) for x in breakdown)
             if dropped_breakdown:
-                normalized_weight -= sum(x.get('weight', 1) for x in dropped_breakdown)
+                normalized_weight -= sum((x.get('weight', 1) or 1.0) for x in dropped_breakdown)
 
             aggregate_score = 0
             if len(breakdown) > len(dropped_breakdown):
-                aggregate_score = sum(m['percent'] * m.get('weight', 1) for m in breakdown if m not in dropped_breakdown)
+                aggregate_score = sum(m['percent'] * (m.get('weight', 1) or 1.0) for m in breakdown if m not in dropped_breakdown)
             if len(breakdown) - drop_count > 0 and normalized_weight > 0:
                 aggregate_score /= normalized_weight
             elif normalized_weight == 0:
@@ -113,7 +113,7 @@ class WeightedAssignmentFormatGrader(CourseGrader):
                     section_name = scores[i].display_name
 
                 percentage = earned / float(possible)
-                weight = getattr(scores[i], 'weight', 1)
+                weight = getattr(scores[i], 'weight', 1) or 1.0
                 summary_format = u"{section_type} {index} - {name} - {percent:.0%} ({earned:.3n}/{possible:.3n})"
                 summary = summary_format.format(
                     index=i + self.starting_index,

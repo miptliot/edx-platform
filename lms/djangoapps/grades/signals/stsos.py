@@ -58,13 +58,17 @@ def stsos_data(kwargs):
     stsos['progress'] = None
     stsos['proctored'] = None
     course_key = CourseLocator.from_string(kwargs['course_id'])
-    scored_block_usage_key = UsageKey.from_string(kwargs['usage_id']).replace(course_key=course_key)
-    descriptor = None
     try:
-        descriptor = modulestore().get_item(scored_block_usage_key)
-        checkpoint_name = descriptor.display_name
+        scored_block_usage_key = UsageKey.from_string(kwargs['usage_id']).replace(course_key=course_key)
     except:
-        checkpoint_name = None
+        return
+    descriptor = None
+    if scored_block_usage_key:
+        try:
+            descriptor = modulestore().get_item(scored_block_usage_key)
+            checkpoint_name = descriptor.display_name
+        except:
+            checkpoint_name = None
     if not descriptor:
         return
     if not descriptor.graded:
