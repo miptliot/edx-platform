@@ -68,7 +68,7 @@ def user_has_role(user, role):
     return False
 
 
-def get_user_permissions(user, course_key, org=None):
+def get_user_permissions(user, course_key, org=None, permissions_cache=None):
     """
     Get the bitmask of permissions that this user has in the given course context.
     Can also set course_key=None and pass in an org to get the user's
@@ -86,8 +86,27 @@ def get_user_permissions(user, course_key, org=None):
     # global staff, org instructors, and course instructors have all permissions:
     if GlobalStaff().has_user(user) or OrgInstructorRole(org=org).has_user(user):
         return all_perms
+    if permissions_cache:
+        course_instructor_role = str(course_key) + '_' + CourseInstructorRole.ROLE
+        if course_instructor_role in permissions_cache['courses']:
+            return all_perms
     if course_key and user_has_role(user, CourseInstructorRole(course_key)):
         return all_perms
+    if permissions_cache:
+        if org:
+            org_staff_role = str(org) + '_staff'
+            org_library_user_role = str(org) + '_' + OrgLibraryUserRole.ROLE
+            if org_staff_role in permissions_cache['orgs']:
+                return STUDIO_VIEW_USERS | STUDIO_EDIT_CONTENT | STUDIO_VIEW_CONTENT
+            if org_library_user_role in permissions_cache['orgs']:
+                return STUDIO_VIEW_USERS | STUDIO_VIEW_CONTENT
+        elif course_key and isinstance(course_key, LibraryLocator):
+            course_staff_role = str(course_key) + '_' + CourseStaffRole.ROLE
+            library_user_role = str(course_key) + '_' + LibraryUserRole.ROLE
+            if course_staff_role in permissions_cache['courses']:
+                return STUDIO_VIEW_USERS | STUDIO_EDIT_CONTENT | STUDIO_VIEW_CONTENT
+            if library_user_role in permissions_cache['courses']:
+                return STUDIO_VIEW_USERS | STUDIO_VIEW_CONTENT
     # Staff have all permissions except EDIT_ROLES:
     if OrgStaffRole(org=org).has_user(user) or (course_key and user_has_role(user, CourseStaffRole(course_key))):
         return STUDIO_VIEW_USERS | STUDIO_EDIT_CONTENT | STUDIO_VIEW_CONTENT
@@ -98,7 +117,7 @@ def get_user_permissions(user, course_key, org=None):
     return STUDIO_NO_PERMISSIONS
 
 
-def has_studio_write_access(user, course_key):
+def has_studio_write_access(user, course_key, permissions_cache=None):
     """
     Return True if user has studio write access to the given course.
     Note that the CMS permissions model is with respect to courses.
@@ -111,7 +130,8 @@ def has_studio_write_access(user, course_key):
     :param user:
     :param course_key: a CourseKey
     """
-    return bool(STUDIO_EDIT_CONTENT & get_user_permissions(user, course_key))
+    return bool(STUDIO_EDIT_CONTENT & get_user_permissions(user, course_key,
+                                                           permissions_cache=permissions_cache))
 
 
 def has_course_author_access(user, course_key):
@@ -121,7 +141,7 @@ def has_course_author_access(user, course_key):
     return has_studio_write_access(user, course_key)
 
 
-def has_studio_read_access(user, course_key):
+def has_studio_read_access(user, course_key, permissions_cache=None):
     """
     Return True iff user is allowed to view this course/library in studio.
     Will also return True if user has write access in studio (has_course_author_access)
@@ -129,7 +149,8 @@ def has_studio_read_access(user, course_key):
     There is currently no such thing as read-only course access in studio, but
     there is read-only access to content libraries.
     """
-    return bool(STUDIO_VIEW_CONTENT & get_user_permissions(user, course_key))
+    return bool(STUDIO_VIEW_CONTENT & get_user_permissions(user, course_key,
+                                                           permissions_cache=permissions_cache))
 
 
 def add_users(caller, role, *users):

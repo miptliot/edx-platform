@@ -409,3 +409,14 @@ class UserBasedRole(object):
         * role (will be self.role--thus uninteresting)
         """
         return CourseAccessRole.objects.filter(role=self.role, user=self.user)
+
+
+def courses_and_roles(user):
+    roles = CourseAccessRole.objects.filter(user=user)
+    res = {'orgs': [], 'courses': []}
+    for obj in roles:
+        if obj.course_id:
+            res['courses'].append(str(obj.course_id) + '_' + obj.role)
+        else:
+            res['orgs'].append(str(obj.org) + '_' + obj.role)
+    return res

@@ -1010,10 +1010,22 @@ class MongoModuleStore(ModuleStoreDraftAndPublished, ModuleStoreWriteBase, Mongo
                 if field in course['metadata']
             }
 
-        course_org_filter = kwargs.get('org')
+        course_records = []
         query = {'_id.category': 'course'}
 
-        if course_org_filter:
+        course_org_filter = kwargs.get('org')
+        course_keys = kwargs.get('course_keys')
+        if course_keys:
+            course_queries = []
+            for course_key in course_keys:
+                course_query = {
+                    '_id.{}'.format(value_attr): getattr(course_key, key_attr)
+                    for key_attr, value_attr in {'org': 'org', 'course': 'course', 'run': 'name'}.iteritems()
+                }
+                course_query.update(query)
+                course_queries.append(course_query)
+            query = {'$or': course_queries}
+        elif course_org_filter:
             query['_id.org'] = course_org_filter
 
         course_records = self.collection.find(query, {'metadata': True})

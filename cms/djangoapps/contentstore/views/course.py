@@ -65,7 +65,8 @@ from openedx.core.lib.course_tabs import CourseTabPluginManager
 from openedx.core.lib.courses import course_image_url
 from student import auth
 from student.auth import has_course_author_access, has_studio_read_access, has_studio_write_access
-from student.roles import CourseCreatorRole, CourseInstructorRole, CourseStaffRole, GlobalStaff, UserBasedRole
+from student.roles import CourseCreatorRole, CourseInstructorRole, CourseStaffRole, GlobalStaff, UserBasedRole, \
+    courses_and_roles
 from util.course import get_link_for_about_page
 from util.date_utils import get_default_time_display
 from util.json_request import JsonResponse, JsonResponseBadRequest, expect_json
@@ -423,47 +424,33 @@ def _accessible_courses_list_from_groups(request):
         """ CCXs cannot be edited in Studio and should not be shown in this dashboard """
         return not isinstance(course_access.course_id, CCXLocator)
 
-    courses_list = {}
-    in_process_course_actions = []
-
     instructor_courses = UserBasedRole(request.user, CourseInstructorRole.ROLE).courses_with_role()
     staff_courses = UserBasedRole(request.user, CourseStaffRole.ROLE).courses_with_role()
     all_courses = filter(filter_ccx, instructor_courses | staff_courses)
 
+    courses_list = []
+    course_keys = {}
+
     for course_access in all_courses:
-        course_key = course_access.course_id
-        if course_key is None:
-            # If the course_access does not have a course_id, it's an org-based role, so we fall back
+        if course_access.course_id is None:
             raise AccessListFallback
-        if course_key not in courses_list:
-            # check for any course action state for this course
-            in_process_course_actions.extend(
-                CourseRerunState.objects.find_all(
-                    exclude_args={'state': CourseRerunUIStateManager.State.SUCCEEDED},
-                    should_display=True,
-                    course_key=course_key,
-                )
-            )
-            # check for the course itself
-            try:
-                course = modulestore().get_course(course_key)
-            except ItemNotFoundError:
-                # If a user has access to a course that doesn't exist, don't do anything with that course
-                pass
+        course_keys[course_access.course_id] = course_access.course_id
 
-            if course is not None and not isinstance(course, ErrorDescriptor):
-                # ignore deleted, errored or ccx courses
-                courses_list[course_key] = course
+    course_keys = course_keys.values()
+    if course_keys:
+        courses_list = modulestore().get_course_summaries(course_keys=course_keys)
 
-    return courses_list.values(), in_process_course_actions
+    return courses_list, []
 
 
-def _accessible_libraries_iter(user):
+def _accessible_libraries_iter(user, permissions_cache=None):
     """
     List all libraries available to the logged in user by iterating through all libraries
     """
     # No need to worry about ErrorDescriptors - split's get_libraries() never returns them.
-    return (lib for lib in modulestore().get_libraries() if has_studio_read_access(user, lib.location.library_key))
+    return (lib for lib in modulestore().get_library_summaries() if has_studio_read_access(user,
+                                                                                           lib.location.library_key,
+                                                                                           permissions_cache))
 
 
 @login_required
@@ -483,7 +470,8 @@ def course_listing(request):
         show_libraries = LIBRARIES_ENABLED
     courses_iter, in_process_course_actions = get_courses_accessible_to_user(request, org)
     user = request.user
-    libraries = _accessible_libraries_iter(request.user) if show_libraries else []
+    permissions_cache = courses_and_roles(user)
+    libraries = _accessible_libraries_iter(request.user, permissions_cache) if show_libraries else []
 
     def format_in_process_course_view(uca):
         """
@@ -506,7 +494,7 @@ def course_listing(request):
             ) if uca.state == CourseRerunUIStateManager.State.FAILED else u''
         }
 
-    def format_library_for_view(library):
+    def format_library_for_view(library, _permissions_cache=None):
         """
         Return a dict of the data which the view requires for each library
         """
@@ -516,17 +504,19 @@ def course_listing(request):
             u'url': reverse_library_url(u'library_handler', unicode(library.location.library_key)),
             u'org': library.display_org_with_default,
             u'number': library.display_number_with_default,
-            u'can_edit': has_studio_write_access(request.user, library.location.library_key),
+            u'can_edit': has_studio_write_access(request.user, library.location.library_key, _permissions_cache),
         }
 
     courses_iter = _remove_in_process_courses(courses_iter, in_process_course_actions)
     in_process_course_actions = [format_in_process_course_view(uca) for uca in in_process_course_actions]
 
+    libraries_data = [format_library_for_view(lib, permissions_cache) for lib in libraries]
+
     return render_to_response(u'index.html', {
         u'courses': list(courses_iter),
         u'in_process_course_actions': in_process_course_actions,
         u'libraries_enabled': show_libraries,
-        u'libraries': [format_library_for_view(lib) for lib in libraries],
+        u'libraries': libraries_data,
         u'show_new_library_button': show_libraries and get_library_creator_status(user),
         u'user': user,
         u'request_course_creator_url': reverse(u'contentstore.views.request_course_creator'),
@@ -660,15 +650,19 @@ def _remove_in_process_courses(courses_iter, in_process_course_actions):
     removes any in-process courses in courses list. in-process actually refers to courses
     that are in the process of being generated for re-run
     """
-    def format_course_for_view(course):
+    orgs_cache = {}
+
+    def format_course_for_view(course, _orgs_cache):
         """
         Return a dict of the data which the view requires for each course
         """
+        url, lms_base = get_lms_link_for_item(course.location, orgs_cache=_orgs_cache, get_lms_base=True)
+        _orgs_cache[course.location.org] = lms_base
         return {
             'display_name': course.display_name,
             'course_key': unicode(course.location.course_key),
             'url': reverse_course_url('course_handler', course.id),
-            'lms_link': get_lms_link_for_item(course.location),
+            'lms_link': url,
             'rerun_link': _get_rerun_link_for_item(course.id),
             'org': course.display_org_with_default,
             'number': course.display_number_with_default,
@@ -677,7 +671,7 @@ def _remove_in_process_courses(courses_iter, in_process_course_actions):
 
     in_process_action_course_keys = {uca.course_key for uca in in_process_course_actions}
     return (
-        format_course_for_view(course)
+        format_course_for_view(course, orgs_cache)
         for course in courses_iter
         if not isinstance(course, ErrorDescriptor) and (course.id not in in_process_action_course_keys)
     )
