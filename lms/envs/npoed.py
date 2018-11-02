@@ -1,4 +1,6 @@
 from aws import *
+from openedx.openedu.common.docker import is_docker
+from openedx.openedu.common.edxlogging import get_patched_logger_config
 
 # ==== Raven ====
 RAVEN_CONFIG = AUTH_TOKENS.get('RAVEN_CONFIG', {})
@@ -10,6 +12,15 @@ if RAVEN_CONFIG:
     except ImportError:
         print 'could not enable Raven!'
 # ===============
+
+if is_docker():
+    get_patched_logger_config(
+        LOGGING,
+        log_dir="/tmp",  # FIXME
+        service_variant=SERVICE_VARIANT,
+        use_raven=bool(RAVEN_CONFIG),
+        use_stsos=True
+    )
 
 SSO_NPOED_URL = ENV_TOKENS.get('SSO_NPOED_URL')
 if SSO_NPOED_URL:
@@ -101,8 +112,6 @@ LOCALE_PATHS += (PROCTOR_LOCALE_PATH,)
 PROCTORING_DEFAULT_LINK_URLS = AUTH_TOKENS.get('PROCTORING_DEFAULT_LINK_URLS')
 
 INSTALLED_APPS += ('openedx.core.djangoapps.npoed_session_monitor',)
-FEATURES["ENABLE_SUSPICIOUS_MONITOR"] = True
-FEATURES["ENABLE_SUSPICIOUS_MONITOR_ADMIN"] = True # Optional
 
 FEATURES['ENABLE_XBLOCK_VIEW_ENDPOINT'] = True
 FEATURES['ENABLE_RG_INSTRUCTOR_ANALYTICS'] = False
