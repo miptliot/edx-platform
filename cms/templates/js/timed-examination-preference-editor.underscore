@@ -105,6 +105,21 @@
                 <label class="label">
                     <%- gettext('gaze_averted - разрешен увод взгляда из области экрана') %>
                 </label></p>
+                    <br/>
+                    <h2>Proctoring type (only for EXAMUS)</h2>
+                    <hr/>
+                <p><label>
+                    <input type="radio" checked name="asynchronous"/>
+                        <%- gettext('regular') %></label>
+                </p>
+                <p>
+                    <label class="label">
+                    <input type="radio" id="asynchronous" name="asynchronous"/>
+                    <%- gettext('asynchronous') %>
+                </label>
+                <br/>
+                    <%- gettext('This type of proctored exam which implies that there will be no proctor during the exam, the proctor will monitor records later. This type also doesn\'t demand preliminary scheduling of an exam from the student - they can start an exam whenever they want.') %>
+                </p>
             </li>
 
         </ul>
