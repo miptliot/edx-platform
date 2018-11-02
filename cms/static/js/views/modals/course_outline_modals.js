@@ -447,6 +447,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
             this.$('#absence').prop('checked', value['absence']);
             this.$('#voices').prop('checked', value['voices']);
             this.$('#gaze_averted').prop('checked', value['gaze_averted']);
+            this.$('#asynchronous').prop('checked', value['asynchronous']);
         },
         setProctoringService: function(value) {
             this.$('#proctoring-service').val(value);
@@ -486,6 +487,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
             var absence = this.$('#absence').is(':checked');
             var voices = this.$('#voices').is(':checked');
             var gaze_averted = this.$('#gaze_averted').is(':checked');
+            var asynchronous = this.$('#asynchronous').is(':checked');
             var exam_proctoring_system = this.$('#proctoring-service').val();
 
             if (this.$('input.no_special_exam').is(':checked')) {
@@ -521,7 +523,8 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                         'human_assistant' : human_assistant,
                         'absence' : absence,
                         'voices' : voices,
-                        'gaze_averted': gaze_averted
+                        'gaze_averted': gaze_averted,
+                        'asynchronous': asynchronous
                     },
                     'exam_proctoring_system': exam_proctoring_system,
                     // We have to use the legacy field name

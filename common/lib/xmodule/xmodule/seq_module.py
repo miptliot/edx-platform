@@ -127,7 +127,8 @@ class ProctoringFields(object):
              "aid": False,
              "web_sites": False,
              "voice": False,
-             "gaze_averted": True
+             "gaze_averted": True,
+             "asynchronous": False,
         },
         scope=Scope.settings,
     )
