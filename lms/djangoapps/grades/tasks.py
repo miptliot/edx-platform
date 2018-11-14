@@ -86,7 +86,7 @@ def recalculate_subsection_grade_v3(self, **kwargs):
     _recalculate_subsection_grade(self, **kwargs)
 
 
-@task(bind=True, base=_BaseTask, default_retry_delay=30, routing_key=settings.RECALCULATE_GRADES_ROUTING_KEY)
+@task(bind=True, base=_BaseTask, default_retry_delay=30, routing_key=settings.RECALCULATE_VERTICAL_GRADES_ROUTING_KEY)
 def recalculate_vertical_grade_v3(self, **kwargs):
     """
     Latest version of the recalculate_vertical_grade task.  See docstring
