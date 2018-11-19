@@ -1578,7 +1578,7 @@ msgstr "Моя команда"
 #: lms/djangoapps/teams/static/teams/js/views/teams_tab.js
 #: lms/templates/instructor/instructor_dashboard_2/certificate-bulk-white-list.underscore
 msgid "Browse"
-msgstr "Открыть в браузере"
+msgstr "Просмотреть все"
 
 #: lms/djangoapps/teams/static/teams/js/views/teams_tab.js
 msgid "Your request could not be completed. Reload the page and try again."
@@ -9555,7 +9555,7 @@ msgid "There was an error processing:"
 msgstr "При обработке произошла ошибка"
 
 msgid  "You are taking \"{exam_link}\" as a {exam_type} exam. The timer on the right shows the time remaining in the exam."
-msgstr "Вы проходите \"{exam_link}\" как {exam_type}. Справа отображается оставшееся время док конца экзамена"
+msgstr "Вы проходите \"{exam_link}\" {exam_type}. Справа отображается оставшееся время до конца экзамена"
 
 msgid "discussion posted %(time_ago)s by %(author)s'"
 msgstr "опубликовано %(time_ago)s пользователем %(author)s'"
