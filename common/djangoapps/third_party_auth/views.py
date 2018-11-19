@@ -38,7 +38,6 @@ def inactive_user_view(request):
         log.error("request.user is AnonymousUser!")
     else:
         profile = UserProfile.objects.get(user=request.user)
-        compose_and_send_activation_email(request.user, profile)
 
     return redirect(request.GET.get('next', 'dashboard'))
 
