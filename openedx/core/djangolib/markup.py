@@ -30,4 +30,8 @@ def HTML(html):                                 # pylint: disable=invalid-name
         )}
 
     """
-    return markupsafe.Markup(html)
+    try:
+        html_safe = markupsafe.Markup(html)
+    except UnicodeDecodeError:
+        html_safe = markupsafe.Markup(html.decode('utf-8'))
+    return html_safe

@@ -25,14 +25,8 @@ function(HtmlUtils) {
         }
     );
 
-    // VideoQualityControl() function - what this module "exports".
-    return function(state) {
+    function _initYoutubeQualityControl(state) {
         var dfd = $.Deferred();
-
-        // Changing quality for now only works for YouTube videos.
-        if (state.videoType !== 'youtube') {
-            return;
-        }
 
         state.videoQualityControl = {};
 
@@ -42,6 +36,29 @@ function(HtmlUtils) {
 
         dfd.resolve();
         return dfd.promise();
+    }
+
+    function _initHtml5QualityControl(state, oldVideoType) {
+        state.videoType = 'youtube';
+
+        var dfd = _initYoutubeQualityControl(state);
+
+        state.videoQualityControl.el.find('.icon').html("SD");
+        state.videoType = oldVideoType;
+        state.videoQualityControl.quality = 'large';
+        state.videoQualityControl.showQualityControl();
+        return dfd;
+    }
+
+    // VideoQualityControl() function - what this module "exports".
+    return function(state) {
+        var oldVideoType = state.videoType;
+
+        if (oldVideoType === 'html5'){
+            return _initHtml5QualityControl(state, oldVideoType);
+        } else {
+            return _initYoutubeQualityControl(state);
+        }
     };
 
     // ***************************************************************

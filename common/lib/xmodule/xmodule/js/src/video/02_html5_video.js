@@ -92,6 +92,46 @@ function(_) {
             this.videoEl.on('error', this.onError.bind(this));
         }
 
+        Player.prototype.getAvailableQualityLevels = function(){
+            return this.videoEl.find('source')["length"];
+        };
+
+        Player.prototype.setPlaybackQuality = function(value){
+            if (value == "large"){
+                return;
+            }
+            if (this.getAvailableQualityLevels() == 1){
+                return;
+            }
+            var btn = this.el.find(".quality-control");
+            var is_active = btn.hasClass("high-def");
+
+            if (is_active){
+                btn.removeClass("high-def");
+                btn.find(".icon").html("SD");
+            }
+            else{
+                btn.addClass("high-def");
+                btn.find(".icon").html("HD");
+            }
+            var state_before_switch = this.playerState;
+            var time = this.getCurrentTime();
+            var sources_obj = this.videoEl.find('source');
+            this.video.innerHTML = sources_obj.eq(1).prop('outerHTML') +' ' + sources_obj.eq(0).prop('outerHTML');
+            var self = this;
+            var g = self.pauseVideo.bind(self);
+            var handler = function() {
+                self.seekTo(time);
+                if (state_before_switch == '2') {
+                    setTimeout(g, 200);
+                }
+                self.video.removeEventListener('loadedmetadata', handler, false)
+            };
+            this.video.addEventListener('loadedmetadata', handler, false);
+            this.video.load();
+            this.playVideo();
+        };
+
         Player.prototype.callStateChangeCallback = function() {
             if ($.isFunction(this.config.events.onStateChange)) {
                 this.config.events.onStateChange({
