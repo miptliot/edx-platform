@@ -90,7 +90,7 @@ class BlockStructureStore(object):
         bs_model = self._get_model(root_block_usage_key)
 
         try:
-            serialized_data = self._get_from_cache(bs_model)
+            serialized_data = self._get_from_store(bs_model)
         except BlockStructureNotFound:
             serialized_data = self._get_from_store(bs_model)
 

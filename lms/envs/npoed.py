@@ -96,3 +96,11 @@ _base_url += "grades/"
 GRADES_DOWNLOAD['STORAGE_KWARGS']['base_url']= _base_url
 if ENV_TOKENS.get('RAVEN_DSN', None):
     RAVEN_DSN = ENV_TOKENS.get('RAVEN_DSN')
+
+FEATURES['CERTIFICATES_HTML_VIEW'] = True
+FEATURES["CUSTOM_CERTIFICATE_TEMPLATES_ENABLED"] = True
+FEATURES['ORGANIZATIONS_APP'] = True
+EXAMUS_PROCTORING_AUTH = {
+        "password": "axaec7reecahPh3i",
+        "username": "integration@openprofession.ru"
+    }

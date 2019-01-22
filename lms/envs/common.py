@@ -584,7 +584,7 @@ STANDALONE_FRAGMENT_VIEW_TEMPLATE = 'fragment-view-chromeless.html'
 AUTHENTICATION_BACKENDS = (
     'ratelimitbackend.backends.RateLimitModelBackend',
 )
-STUDENT_FILEUPLOAD_MAX_SIZE = 4 * 1000 * 1000  # 4 MB
+STUDENT_FILEUPLOAD_MAX_SIZE = 40 * 1000 * 1000  # 40 MB
 MAX_FILEUPLOADS_PER_INPUT = 20
 
 # Dev machines shouldn't need the book

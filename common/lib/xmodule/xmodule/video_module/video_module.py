@@ -955,9 +955,7 @@ class VideoDescriptor(VideoDescriptorEvmsMixin, VideoFields, VideoTranscriptsMix
             # to False to disable this fall back.
             elif context.get("allow_cache_miss", "True").lower() == "true":
                 try:
-                    val_video_data = edxval_api.get_video_info(self.edx_video_id)
-                    if val_video_data is None:
-                        val_video_data = {}
+                    val_video_data = edxval_api.get_video_info(self.edx_video_id) or {'encoded_videos':[]}
                     # Unfortunately, the VAL API is inconsistent in how it returns the encodings, so remap here.
                     for enc_vid in val_video_data.pop('encoded_videos'):
                         if enc_vid['profile'] in video_profile_names:
