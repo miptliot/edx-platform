@@ -14,4 +14,45 @@
     ${HTML(item['content'])}
   </div>
 % endfor
+
+% if involvement:
+<p>Token: ${involvement}</p>
+% endif
+
+<p>Involvement collection
+% if involvement:
+ enabled.
+% else:
+ disbaled.
+% endif.
+Click <a href='/api/involvement/change_involvement_status/'>here</a> to
+% if involvement:
+ disable
+% else:
+ enable
+% endif
+</p>
+<%namespace name='static' file='/static_content.html'/>
+% if involvement:
+    <div class="camera-video-container text-right">
+        <video class="hide" id="webcamVideo" width="150px" hidden playsinline autoplay muted>
+        </video>
+    </div>
+    <script type="text/javascript" src=${static.url("js/faceNLZ.js")}></script>
+    <script type="text/javascript" src=${static.url("js/cybert.js")}></script>
+    <script>
+	//$(document).ready(function () {
+            console.log('1111')
+            let jwtToken = '${involvement}'
+            let videoElementId = 'webcamVideo'
+            let cp = window.faceNLZ.prepare({jwtToken, videoElementId})
+            cp.then(x => {
+              window.startNLZ = x.start
+              window.stopNLZ = x.pause
+              x.start()
+            })
+        //});
+    </script>
+% endif
+
 </div>

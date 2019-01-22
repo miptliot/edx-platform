@@ -15,6 +15,8 @@ from xmodule.studio_editable import StudioEditableBlock
 from xmodule.x_module import STUDENT_VIEW, XModuleFields
 from xmodule.xml_module import XmlParserMixin
 
+from openedx.opro.involvement.utils import check_involvement
+
 log = logging.getLogger(__name__)
 
 # HACK: This shouldn't be hard-coded to two types
@@ -70,8 +72,11 @@ class VerticalBlock(SequenceFields, XModuleFields, StudioEditableBlock, XmlParse
                 'content': rendered_child.content
             })
 
+        token = check_involvement(self.course_id, self.location, child_context['username'])
+
         fragment.add_content(self.system.render_template('vert_module.html', {
             'items': contents,
+            'involvement': token,
             'xblock_context': context,
             'unit_title': self.display_name_with_default if not is_child_of_vertical else None,
             'show_bookmark_button': child_context.get('show_bookmark_button', not is_child_of_vertical),

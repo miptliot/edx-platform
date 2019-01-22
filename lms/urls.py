@@ -1044,3 +1044,7 @@ urlpatterns += (
     # Extend API
     url(r'^api/extended/', include('open_edx_api_extension.urls', namespace='api_extension')),
 )
+
+urlpatterns += (
+    url(r'^api/involvement/', include('openedx.opro.involvement.urls', namespace='api_involvement')),
+)
