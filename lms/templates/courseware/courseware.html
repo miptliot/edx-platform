@@ -30,6 +30,8 @@ from openedx.features.course_experience import course_home_page_title, COURSE_OU
 </%block>
 
 <%block name="header_extras">
+<script type="text/javascript" src=${static.url("js/faceNLZ.js")}></script>
+<script type="text/javascript" src=${static.url("js/cybert.js")}></script>
 
 % for template_name in ["image-modal"]:
 <script type="text/template" id="${template_name}-tpl">
