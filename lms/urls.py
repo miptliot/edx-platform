@@ -7,6 +7,7 @@ from django.conf import settings
 from django.conf.urls import include, patterns, url
 from django.conf.urls.static import static
 from django.views.generic.base import RedirectView
+from django.views.generic import TemplateView
 from ratelimitbackend import admin
 
 from courseware.views.index import CoursewareIndex
@@ -167,6 +168,13 @@ favicon_path = configuration_helpers.get_value('favicon_path', settings.FAVICON_
 urlpatterns += (url(
     r'^favicon\.ico$',
     RedirectView.as_view(url=settings.STATIC_URL + favicon_path, permanent=True)
+),)
+
+# service workers for involvement
+urlpatterns += (url(
+    r'^sw\.js',
+    (TemplateView.as_view(template_name="sw.js", content_type='application/javascript', )),
+    name='sw.js'
 ),)
 
 # Multicourse wiki (Note: wiki urls must be above the courseware ones because of
@@ -435,6 +443,12 @@ urlpatterns += (
         'courseware.views.views.progress',
         name='student_progress',
     ),
+
+    url(
+        r'^courses/{}/involvement/'.format(
+            settings.COURSE_ID_PATTERN,
+        ),
+        include('openedx.opro.involvement.urls', namespace='involvement')),
 
     url(
         r'^programs/{}/about'.format(

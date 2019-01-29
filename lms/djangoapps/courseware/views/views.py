@@ -88,6 +88,7 @@ from openedx.core.djangoapps.site_configuration import helpers as configuration_
 from openedx.features.course_experience import UNIFIED_COURSE_TAB_FLAG, course_home_url_name
 from openedx.features.course_experience.views.course_dates import CourseDatesFragmentView
 from openedx.features.enterprise_support.api import data_sharing_consent_required
+from openedx.opro.involvement.utils import involvement_is_enabled, get_blocks_involvement, involvement_block_type
 from shoppingcart.utils import is_shopping_cart_enabled
 from student.models import CourseEnrollment, UserTestGroup
 from survey.utils import must_answer_survey
@@ -929,6 +930,26 @@ def _progress(request, course_key, student_id):
     # checking certificate generation configuration
     enrollment_mode, is_active = CourseEnrollment.enrollment_mode_for_user(student, course_key)
 
+    involvement_enabled = involvement_is_enabled(course)
+    involvement_blocks_type = involvement_block_type()
+    blocks_involvement = {}
+    vertical_blocks_data = {}
+    if involvement_enabled:
+        blocks_involvement = get_blocks_involvement(course_key, request.user)
+        if involvement_blocks_type == 'vertical' or True:
+            vertical_blocks = modulestore().get_items(course_key, qualifiers={'category': 'vertical'})
+            for v in vertical_blocks:
+                parent_id = str(v.parent)
+                loc_id = str(v.location)
+                if loc_id in blocks_involvement:
+                    if parent_id not in vertical_blocks_data:
+                        vertical_blocks_data[str(v.parent)] = []
+                    vertical_blocks_data[parent_id].append({
+                        'block_id': str(v.location),
+                        'display_name': v.display_name,
+                        'url': blocks_involvement[loc_id]['url']
+                    })
+
     context = {
         'course': course,
         'courseware_summary': courseware_summary,
@@ -944,6 +965,12 @@ def _progress(request, course_key, student_id):
         # TODO: (Experimental Code). See https://openedx.atlassian.net/wiki/display/RET/2.+In-course+Verification+Prompts
         'upgrade_link': check_and_get_upgrade_link(request, student, course.id),
         'upgrade_price': get_cosmetic_verified_display_price(course),
+        'involvement': {
+            'involvement_enabled': involvement_enabled,
+            'involvement_block_type': involvement_blocks_type,
+            'blocks_involvement': blocks_involvement,
+            'vertical_blocks_data': vertical_blocks_data
+        }
         # ENDTODO
     }
 
