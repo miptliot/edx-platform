@@ -51,6 +51,10 @@ $headings-base-color:                       $gray-d2;
     font-size: 1.25em;
     font-weight: $headings-font-weight-bold;
     line-height: 1.4em;
+
+    .small {
+       font-size: 0.75em;
+    }
 }
 
 

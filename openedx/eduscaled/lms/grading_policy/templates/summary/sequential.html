@@ -31,6 +31,9 @@ from django.conf import settings
                             %if total > 0 or earned > 0:
                             <span> ${"({0:.3n}/{1:.3n}) {2}".format( float(earned), float(total), percentageString )}</span>
                             %endif
+                            %if str(section.location) in involvement['blocks_involvement']:
+                            | <a class="small" href="${involvement['blocks_involvement'][str(section.location)]['url']}" target="_blank">${_("Involvement chart")}</a>
+                            %endif
                         </h4>
                         <p>
                             %if section.format is not None:
@@ -67,6 +70,12 @@ from django.conf import settings
                           %endif
                         %else:
                         <p class="no-scores">${_("No problem scores in this section")}</p>
+                        %endif
+                        %if str(section.location) in involvement['vertical_blocks_data']:
+                            <div class="hd hd-6">${_("Blocks Involvement:")}</div>
+                            %for vert_block in involvement['vertical_blocks_data'][str(section.location)]:
+                            <div><a href="${vert_block['url']}" target="_blank">${vert_block['display_name']}</a></div>
+                            %endfor
                         %endif
                     </div>
                 %endfor

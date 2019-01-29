@@ -2240,6 +2240,8 @@ INSTALLED_APPS = (
     'openedx.features.course_search',
     'openedx.features.enterprise_support',
 
+    'openedx.opro.involvement',
+
     'experiments',
 )
 

@@ -153,7 +153,7 @@ from django.utils.http import urlquote_plus
                 %endif
 
                 <%namespace name="progress_summary" file="${context['progress_summary_template']}"/>
-                ${progress_summary.body(courseware_summary)}
+                ${progress_summary.body(courseware_summary, involvement=involvement)}
             </section>
         </div>
     </div>

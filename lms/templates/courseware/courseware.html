@@ -30,7 +30,10 @@ from openedx.features.course_experience import course_home_page_title, COURSE_OU
 </%block>
 
 <%block name="header_extras">
-
+% if involvement_is_enabled and user_allow_involvement:
+<script type="text/javascript" src=${static.url("js/faceNLZ.js")}></script>
+<script type="text/javascript" src=${static.url("js/cybert.js")}></script>
+% endif
 % for template_name in ["image-modal"]:
 <script type="text/template" id="${template_name}-tpl">
     <%static:include path="common/templates/${template_name}.underscore" />

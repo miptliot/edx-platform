@@ -35,6 +35,10 @@ CATALOG_VISIBILITY_CATALOG_AND_ABOUT = "both"
 CATALOG_VISIBILITY_ABOUT = "about"
 CATALOG_VISIBILITY_NONE = "none"
 
+INVOLVEMENT_DISABLED = "disabled"
+INVOLVEMENT_OPTIONAL = "optional"
+INVOLVEMENT_REQUIRED = "required"
+
 ENABLE_VERTICAL_GRADING_BY_DEFAULT = getattr(settings, 'DEFAULT_GRADING_TYPE', 'sequential') == 'vertical'
 
 
@@ -887,6 +891,17 @@ class CourseFields(object):
         help="",
         scope=Scope.settings,
         default=ENABLE_VERTICAL_GRADING_BY_DEFAULT
+    )
+
+    involvement = String(
+        display_name=_("Involvement"),
+        help=_('Available values: "disabled", "optional", "required"'),
+        default=INVOLVEMENT_DISABLED,
+        scope=Scope.settings,
+        values=[
+            {"display_name": _("Disabled"), "value": INVOLVEMENT_DISABLED},
+            {"display_name": _("Optional"), "value": INVOLVEMENT_OPTIONAL},
+            {"display_name": _("Required"), "value": INVOLVEMENT_REQUIRED}]
     )
 
 

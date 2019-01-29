@@ -16,7 +16,10 @@ from django.conf import settings
         <section aria-labelledby="chapter_${loop.index}">
             <h3 class="hd hd-3" id="chapter_${loop.index}">${ chapter['display_name']}</h3>
             <div class="sections">
-                %for section in chapter['sections'].values():
+                %for section_id, section in chapter['sections'].items():
+                    %if str(section_id) in involvement['blocks_involvement']:
+                    <div>${section['display_name']}: <a class="small" href="${involvement['blocks_involvement'][str(section_id)]['url']}" target="_blank">${_("Involvement chart")}</a></div>
+                    %endif
                     %for vertical in section['verticals']:
                         <div>
                             <%
@@ -35,6 +38,9 @@ from django.conf import settings
                                 </a>
                                 %if total > 0 or earned > 0:
                                 <span> ${"({0:.3n}/{1:.3n}) {2}".format( float(earned), float(total), percentageString )}</span>
+                                %endif
+                                %if str(vertical.location) in involvement['blocks_involvement']:
+                                | <a class="small" href="${involvement['blocks_involvement'][str(vertical.location)]['url']}" target="_blank">${_("Involvement chart")}</a>
                                 %endif
                             </h4>
                             <p>
