@@ -56,7 +56,7 @@ def get_blocks_involvement(course_key, user):
             'link_id': link.link_id
         })
         result[str(link.usage_key)] = {
-            'url': '%s/graphics/dev/graphics.html?token=%s' % (
+            'url': '%s/graphics/dev/graphics.html?token=%s&step=20' % (
                 EXAMUS_INVOLVEMENT_CHARTS_HOST, token
             ),
             'block_type': link.block_type,
@@ -100,5 +100,4 @@ def ask_enable_involvement(course, user):
 def prepare_jwt_token(payload):
     payload['name'] = EXAMUS_INVOLVEMENT_TOKEN_NAME
     payload['exp'] = int(time.time()) + JWT_TOKEN_LIFETIME
-    print 'jwt.encode(', payload, ',', EXAMUS_INVOLVEMENT_TOKEN_SECRET, ',', JWT_ALGORITHM, ')'
     return jwt.encode(payload, EXAMUS_INVOLVEMENT_TOKEN_SECRET, JWT_ALGORITHM)

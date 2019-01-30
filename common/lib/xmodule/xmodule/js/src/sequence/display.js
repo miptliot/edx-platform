@@ -166,7 +166,6 @@
                                 workerPath: '/sw.js',
                                 serverUrl: self.involvementApiHost
                             };
-                            console.log('faceAnalyzerParams : ', faceAnalyzerParams);
                             var faceAnalyzer = window.faceNLZ.prepare(faceAnalyzerParams);
                             faceAnalyzer.then(function(x) {
                                 window.startNLZ = x.start;
