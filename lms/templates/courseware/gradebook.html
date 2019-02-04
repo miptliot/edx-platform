@@ -108,7 +108,10 @@ from django.core.urlresolvers import reverse
 
         <tbody>
           %for student in students:
-          <% sections_passed = {section['category']: section['is_passed'] for section in student['grade_summary']['grade_breakdown']} %>
+          <%
+              a = student['grade_summary']['grade_breakdown'].items()
+              sections_passed = {section[1]['category']: section[1]['is_passed'] for section in student['grade_summary']['grade_breakdown'].items()}
+          %>
           <tr>
             %for section in student['grade_summary']['section_breakdown']:
               <% is_passed = sections_passed.get(section['category']) %>
