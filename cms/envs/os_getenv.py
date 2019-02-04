@@ -118,7 +118,7 @@ FEATURES['USE_CUSTOM_THEME'] = str(os.getenv('FEATURES__USE_CUSTOM_THEME', False
 FILE_UPLOAD_STORAGE_BUCKET_NAME = os.getenv('FILE_UPLOAD_STORAGE_BUCKET_NAME', FILE_UPLOAD_STORAGE_BUCKET_NAME if 'FILE_UPLOAD_STORAGE_BUCKET_NAME' in locals() else '')
 FILE_UPLOAD_STORAGE_PREFIX = os.getenv('FILE_UPLOAD_STORAGE_PREFIX', FILE_UPLOAD_STORAGE_PREFIX if 'FILE_UPLOAD_STORAGE_PREFIX' in locals() else 'submissions_attachments')
 FOOTER_ORGANIZATION_IMAGE = os.getenv('FOOTER_ORGANIZATION_IMAGE', FOOTER_ORGANIZATION_IMAGE if 'FOOTER_ORGANIZATION_IMAGE' in locals() else 'images/logo.png')
-GITHUB_REPO_ROOT = os.getenv('GITHUB_REPO_ROOT', GITHUB_REPO_ROOT if 'GITHUB_REPO_ROOT' in locals() else '/edx/var/edxapp/data')
+GITHUB_REPO_ROOT = os.getenv('GITHUB_REPO_ROOT', GITHUB_REPO_ROOT if 'GITHUB_REPO_ROOT' in locals() else '/edx/var/edxapp/datastore/data')
 
 LANGUAGE_CODE = os.getenv('LANGUAGE_CODE', LANGUAGE_CODE if 'LANGUAGE_CODE' in locals() else 'ru')
 LMS_BASE = os.getenv('LMS_BASE', LMS_BASE if 'LMS_BASE' in locals() else 'localhost')
@@ -126,7 +126,7 @@ LMS_ROOT_URL = os.getenv('LMS_ROOT_URL', LMS_ROOT_URL if 'LMS_ROOT_URL' in local
 LOCAL_LOGLEVEL = os.getenv('LOCAL_LOGLEVEL', LOCAL_LOGLEVEL if 'LOCAL_LOGLEVEL' in locals() else 'INFO')
 LOGGING_ENV = os.getenv('LOGGING_ENV', LOGGING_ENV if 'LOGGING_ENV' in locals() else 'sandbox')
 LOG_DIR = os.getenv('LOG_DIR', LOG_DIR if 'LOG_DIR' in locals() else '/edx/var/logs/edx')
-MEDIA_ROOT = os.getenv('MEDIA_ROOT', MEDIA_ROOT if 'MEDIA_ROOT' in locals() else '/edx/var/edxapp/media/')
+MEDIA_ROOT = os.getenv('MEDIA_ROOT', MEDIA_ROOT if 'MEDIA_ROOT' in locals() else '/edx/var/edxapp/datastore/media/')
 MEDIA_URL = os.getenv('MEDIA_URL', MEDIA_URL if 'MEDIA_URL' in locals() else '/media/')
 
 TP_MAKO_TEMPLATES = os.getenv('TP_MAKO_TEMPLATES_CMS', '/edx/app/edxapp/venv/src/sso-edx-tp/sso_edx_tp/templates/cms')
@@ -153,7 +153,7 @@ SSO_TP_URL = os.getenv('SSO_TP_URL', locals().get('SSO_TP_URL'))
 SSO_API_URL = '%s/api-edx/' % SSO_TP_URL
 SOCIAL_AUTH_LOGOUT_URL = '%s/logout/' % SSO_TP_URL
 
-STATIC_ROOT_BASE = os.getenv('STATIC_ROOT_BASE', STATIC_ROOT_BASE if 'STATIC_ROOT_BASE' in locals() else '/edx/var/edxapp/staticfiles')
+STATIC_ROOT_BASE = os.getenv('STATIC_ROOT_BASE', STATIC_ROOT_BASE if 'STATIC_ROOT_BASE' in locals() else '/edx/var/edxapp/datastore/staticfiles')
 STATIC_URL_BASE = os.getenv('STATIC_URL_BASE', STATIC_URL_BASE if 'STATIC_URL_BASE' in locals() else '/static/')
 
 TECH_SUPPORT_EMAIL = os.getenv('TECH_SUPPORT_EMAIL', locals().get('TECH_SUPPORT_EMAIL'))
@@ -274,7 +274,7 @@ MODULESTORE = {
                     "NAME": "split",
                     "OPTIONS": {
                         "default_class": "xmodule.hidden_module.HiddenDescriptor",
-                        "fs_root": "/edx/var/edxapp/data",
+                        "fs_root": "/edx/var/edxapp/datastore/data",
                         "render_template": "edxmako.shortcuts.render_to_string"
                     }
                 },
@@ -296,7 +296,7 @@ MODULESTORE = {
                     "NAME": "draft",
                     "OPTIONS": {
                         "default_class": "xmodule.hidden_module.HiddenDescriptor",
-                        "fs_root": "/edx/var/edxapp/data",
+                        "fs_root": "/edx/var/edxapp/datastore/data",
                         "render_template": "edxmako.shortcuts.render_to_string"
                     }
                 }
