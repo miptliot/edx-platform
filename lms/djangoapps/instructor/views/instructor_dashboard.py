@@ -54,6 +54,7 @@ from util.json_request import JsonResponse
 from xmodule.html_module import HtmlDescriptor
 from xmodule.modulestore.django import modulestore
 from xmodule.tabs import CourseTab
+from course_shifts.utils import course_shifts_enabled
 
 from .tools import get_units_with_due_date, title_or_url
 
@@ -226,6 +227,9 @@ def instructor_dashboard_2(request, course_id):
     )
 
     certificate_invalidations = CertificateInvalidation.get_certificate_invalidations(course_key)
+
+    if course_shifts_enabled(course):
+        sections.append(_section_course_shifts(course_key))
 
     context = {
         'course': course,
@@ -774,6 +778,22 @@ def _section_open_response_assessment(request, course, openassessment_blocks, ac
         'course_id': unicode(course_key),
     }
     return section_data
+
+
+def _section_course_shifts(course_key):
+    return {
+        'section_key': 'course_shifts',
+        'section_display_name': _('Course Shifts'),
+        'course_id': unicode(course_key),
+        'get_course_shifts_url': reverse('get-course-shifts',
+                                         kwargs={'course_id': unicode(course_key)}),
+        'update_course_shifts_url': reverse('update-course-shifts',
+                                            kwargs={'course_id': unicode(course_key)}),
+        'find_user_and_course_shifts_url': reverse('find-user-and-course-shifts',
+                                                   kwargs={'course_id': unicode(course_key)}),
+        'update_user_course_shift_url': reverse('update-user-course-shift',
+                                                kwargs={'course_id': unicode(course_key)}),
+    }
 
 
 def is_ecommerce_course(course_key):

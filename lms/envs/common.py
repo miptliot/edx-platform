@@ -1403,6 +1403,7 @@ base_vendor_js = [
 main_vendor_js = base_vendor_js + [
     'js/vendor/json2.js',
     'js/vendor/jquery-ui.min.js',
+    'js/vendor/timepicker/jquery.timepicker.min.js',
     'js/vendor/jquery.qtip.min.js',
     'js/vendor/jquery.ba-bbq.min.js',
 ]
@@ -1554,6 +1555,7 @@ PIPELINE_CSS = {
             'js/vendor/CodeMirror/codemirror.css',
             'css/vendor/jquery.treeview.css',
             'css/vendor/ui-lightness/jquery-ui-1.8.22.custom.css',
+            'js/vendor/timepicker/jquery.timepicker.css'
         ],
         'output_filename': 'css/lms-style-course-vendor.css',
     },
@@ -2316,6 +2318,8 @@ INSTALLED_APPS = [
 
     # API Documentation
     'rest_framework_swagger',
+
+    'course_shifts',
 ]
 
 ######################### CSRF #########################################

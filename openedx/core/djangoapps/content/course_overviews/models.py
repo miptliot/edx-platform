@@ -26,6 +26,7 @@ from xmodule import course_metadata_utils, block_metadata_utils
 from xmodule.course_module import CourseDescriptor, DEFAULT_START_DATE
 from xmodule.error_module import ErrorDescriptor
 from xmodule.modulestore.django import modulestore
+from course_shifts.models import CourseShift
 
 log = logging.getLogger(__name__)
 
@@ -105,6 +106,12 @@ class CourseOverview(TimeStampedModel):
     eligible_for_financial_aid = BooleanField(default=True)
 
     language = TextField(null=True)
+
+    _course_shift = None
+    _init_start = None
+    _init_end = None
+    _init_enrollment_start = None
+    _init_enrollment_end = None
 
     @classmethod
     def _create_or_update(cls, course):
@@ -202,6 +209,40 @@ class CourseOverview(TimeStampedModel):
         return course_overview
 
     @classmethod
+    def course_shift_enabled(cls):
+        return settings.FEATURES.get("ENABLE_COURSE_SHIFTS", False) and 'lms' in settings.ROOT_URLCONF
+
+    def set_course_shift(self, course_shift=None, user=None):
+        if CourseOverview.course_shift_enabled():
+            if not course_shift:
+                course_shift = CourseShift.get_course_shift(self.id, user)
+            if course_shift:
+                self._course_shift = course_shift
+                self._set_course_shift_dates()
+
+    def _set_course_shift_dates(self):
+        self._init_start = self.start
+        self._init_end = self.end
+        self._init_enrollment_start = self.enrollment_start
+        self._init_enrollment_end = self.enrollment_end
+
+        self.start = self._course_shift['start_date']
+        self.end = None
+        self.enrollment_start = self._course_shift['enrollment_start_date']
+        self.enrollment_end = self._course_shift['enrollment_end_date']
+
+    def _return_init_dates(self):
+        self.start = self._init_start
+        self.end = self._init_end
+        self.enrollment_start = self._init_enrollment_start
+        self.enrollment_end = self._init_enrollment_end
+
+    def save(self, **kwargs):
+        self._return_init_dates()
+        super(CourseOverview, self).save(**kwargs)
+        self._set_course_shift_dates()
+
+    @classmethod
     def load_from_module_store(cls, course_id):
         """
         Load a CourseDescriptor, create or update a CourseOverview from it, cache the
@@ -265,7 +306,7 @@ class CourseOverview(TimeStampedModel):
                 raise cls.DoesNotExist()
 
     @classmethod
-    def get_from_id(cls, course_id):
+    def get_from_id(cls, course_id, user=None):
         """
         Load a CourseOverview object for a given course ID.
 
@@ -301,10 +342,13 @@ class CourseOverview(TimeStampedModel):
         if course_overview and not hasattr(course_overview, 'image_set'):
             CourseOverviewImageSet.create(course_overview)
 
-        return course_overview or cls.load_from_module_store(course_id)
+        co = course_overview or cls.load_from_module_store(course_id)
+        if co:
+            co.set_course_shift(user=user)
+        return co
 
     @classmethod
-    def get_from_ids_if_exists(cls, course_ids):
+    def get_from_ids_if_exists(cls, course_ids, user=None):
         """
         Return a dict mapping course_ids to CourseOverviews, if they exist.
 
@@ -315,14 +359,21 @@ class CourseOverview(TimeStampedModel):
         Callers should assume that this list is incomplete and fall back to
         get_from_id if they need to guarantee CourseOverview generation.
         """
-        return {
-            overview.id: overview
-            for overview
-            in cls.objects.select_related('image_set').filter(
+        result = {}
+        course_shifts = {}
+
+        if CourseOverview.course_shift_enabled():
+            course_shifts = CourseShift.get_course_shift(course_ids, user)
+
+        for overview in cls.objects.select_related('image_set').filter(
                 id__in=course_ids,
-                version__gte=cls.VERSION
-            )
-        }
+                version__gte=cls.VERSION):
+            overview_id = str(overview.id)
+            if overview_id in course_shifts:
+                overview.set_course_shift(course_shifts[overview_id], user)
+            result[overview.id] = overview
+
+        return result
 
     @classmethod
     def get_from_id_if_exists(cls, course_id):
@@ -558,7 +609,7 @@ class CourseOverview(TimeStampedModel):
         log.info('Finished generating course overviews.')
 
     @classmethod
-    def get_all_courses(cls, orgs=None, filter_=None):
+    def get_all_courses(cls, orgs=None, filter_=None, user=None):
         """
         Returns all CourseOverview objects in the database.
 
@@ -580,6 +631,15 @@ class CourseOverview(TimeStampedModel):
 
         if filter_:
             course_overviews = course_overviews.filter(**filter_)
+
+        if CourseOverview.course_shift_enabled():
+            course_keys = [c.id for c in course_overviews]
+            course_shifts = CourseShift.get_course_shift(course_keys, user)
+
+            for i, co in enumerate(course_overviews):
+                course_key_str = str(co.id)
+                if course_key_str in course_shifts:
+                    course_overviews[i].set_course_shift(course_shifts[course_key_str], user)
 
         return course_overviews
 

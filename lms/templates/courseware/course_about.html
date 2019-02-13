@@ -169,7 +169,7 @@ from six import string_types
           </a>
           <div id="register_error"></div>
         %else:
-          <% 
+          <%
             if ecommerce_checkout:
               reg_href = ecommerce_checkout_link
             else:
@@ -232,7 +232,7 @@ from six import string_types
           <li class="important-dates-item"><span class="icon fa fa-info-circle" aria-hidden="true"></span><p class="important-dates-item-title">${_("Course Number")}</p><span class="important-dates-item-text course-number">${course.display_number_with_default | h}</span></li>
           % if not course.start_date_is_still_default:
               <%
-                  course_start_date = course.advertised_start or course.start
+                  course_start_date = course.advertised_start or overview.start
               %>
             <li class="important-dates-item">
               <span class="icon fa fa-calendar" aria-hidden="true"></span>
@@ -249,9 +249,9 @@ from six import string_types
           % endif
             ## We plan to ditch end_date (which is not stored in course metadata),
             ## but for backwards compatibility, show about/end_date blob if it exists.
-            % if course.end:
+            % if overview.end:
                 <%
-                    course_end_date = course.end
+                    course_end_date = overview.end
                 %>
 
             <li class="important-dates-item">

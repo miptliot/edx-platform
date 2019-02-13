@@ -886,6 +886,18 @@ class CourseFields(object):
         ),
         scope=Scope.settings, default=False
     )
+    enable_course_shifts = Boolean(
+        display_name=_("Enable Course Shifts"),
+        help=_("Enable Course Shifts"),
+        scope=Scope.settings,
+        default=False
+    )
+    enable_student_change_course_shift = Boolean(
+        display_name=_("Enable Student Change Course Shift"),
+        help=_("Enable Student Change Course Shift"),
+        scope=Scope.settings,
+        default=False
+    )
 
 
 class CourseModule(CourseFields, SequenceModule):  # pylint: disable=abstract-method

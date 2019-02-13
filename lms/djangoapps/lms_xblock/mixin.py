@@ -46,6 +46,7 @@ class GroupAccessDict(Dict):
 @XBlock.needs('partitions')
 @XBlock.needs('i18n')
 @XBlock.wants('completion')
+@XBlock.wants('usage_info')
 class LmsBlockMixin(XBlockMixin):
     """
     Mixin that defines fields common to all blocks used in the LMS

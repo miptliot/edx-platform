@@ -27,6 +27,7 @@ from openedx.core.djangoapps.plugin_api.views import EdxFragmentView
 from openedx.core.djangoapps.util.maintenance_banner import add_maintenance_banner
 from openedx.features.course_experience.course_tools import CourseToolsPluginManager
 from student.models import CourseEnrollment
+from course_shifts.models import allow_to_change_deadline
 from util.views import ensure_valid_course_key
 
 from .. import LATEST_UPDATE_FLAG, SHOW_UPGRADE_MSG_ON_COURSE_HOME, USE_BOOTSTRAP_FLAG
@@ -175,6 +176,10 @@ class CourseHomeFragmentView(EdxFragmentView):
             upgrade_url = EcommerceService().upgrade_url(request.user, course_key)
             upgrade_price = get_cosmetic_verified_display_price(course)
 
+        possibility_to_change_deadline = False
+        if request.user.is_authenticated and course.enable_student_change_course_shift:
+            possibility_to_change_deadline, course_shift = allow_to_change_deadline(course_key, request.user)
+
         # Render the course home fragment
         context = {
             'request': request,
@@ -199,6 +204,9 @@ class CourseHomeFragmentView(EdxFragmentView):
             'uses_pattern_library': True,
             'upgrade_price': upgrade_price,
             'upgrade_url': upgrade_url,
+            'possibility_to_change_deadline': possibility_to_change_deadline,
+            'course_shifts_update_deadlines_url': reverse('update-deadlines-course-shift',
+                                                          kwargs={'course_id': unicode(course_key)})
         }
         html = render_to_string('course_experience/course-home-fragment.html', context)
         return Fragment(html)

@@ -313,6 +313,75 @@
       }
     }
   }
+
+  .course-shifts {
+    padding-top: 10px;
+
+    .main-block {
+      display: none
+    }
+
+    .error-msg {
+      color: #ff0000;
+      clear: both;
+    }
+
+    .loading {
+      margin-bottom: 10px;
+    }
+
+    .header {
+      font-weight: 600;
+    }
+
+    table {
+      table-layout: fixed;
+    }
+
+
+    td, th {
+      padding: 6px;
+      border: none;
+      vertical-align: middle;
+    }
+
+    .title-field {
+      width: 320px;
+    }
+
+    .date-field {
+      width: 255px;
+    }
+
+    .input-title-field, .user-search-token {
+      width: 300px;
+    }
+
+    .user-actions {
+      display: none;
+      padding-top: 20px;
+    }
+
+    .date {
+      width: 130px;
+    }
+
+    .time {
+      width: 100px;
+    }
+
+    .students-num {
+      width: 180px;
+    }
+
+    .actions {
+      width: 200px;
+    }
+
+    .user-search-error, .user-update-error {
+      padding-top: 6px;
+    }
+  }
 }
 
 // elements - general

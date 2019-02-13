@@ -78,6 +78,7 @@ from xmodule.lti_module import LTIModule
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.exceptions import ItemNotFoundError
 from xmodule.x_module import XModuleDescriptor
+from xblock.exceptions import NoSuchServiceError
 
 from .field_overrides import OverrideFieldData
 
@@ -837,6 +838,19 @@ def get_module_for_descriptor_internal(user, descriptor, student_data, course_id
     )
 
     descriptor.scope_ids = descriptor.scope_ids._replace(user_id=user.id)
+
+    if descriptor.category in ['chapter', 'sequential'] and not descriptor.updated_course_shifts_dates\
+            and descriptor.service_declaration("usage_info"):
+        try:
+            usage_info_service = descriptor.runtime.service(descriptor, "usage_info")
+            if usage_info_service:
+                descriptor.updated_course_shifts_dates = True
+                if hasattr(descriptor, 'start') and descriptor.start:
+                    descriptor.start = usage_info_service.course_shift_date(descriptor.start)
+                if hasattr(descriptor, 'due') and descriptor.due:
+                    descriptor.due = usage_info_service.course_shift_date(descriptor.due)
+        except NoSuchServiceError:
+            pass
 
     # Do not check access when it's a noauth request.
     # Not that the access check needs to happen after the descriptor is bound

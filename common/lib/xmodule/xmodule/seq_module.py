@@ -649,6 +649,8 @@ class SequenceDescriptor(SequenceFields, ProctoringFields, MakoModuleDescriptor,
 
     show_in_read_only_mode = True
 
+    updated_course_shifts_dates = False
+
     js = {
         'js': [resource_string(__name__, 'js/src/sequence/edit.js')],
     }
