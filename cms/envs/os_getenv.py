@@ -4,6 +4,7 @@ import os
 
 
 ### Env
+DATA_DIR = os.getenv('DATA_DIR', locals().get('DATA_DIR'))
 BUGS_EMAIL = os.getenv('BUGS_EMAIL', locals().get('BUGS_EMAIL'))
 BULK_EMAIL_DEFAULT_FROM_EMAIL = os.getenv('BULK_EMAIL_DEFAULT_FROM_EMAIL', locals().get('BULK_EMAIL_DEFAULT_FROM_EMAIL'))
 
