@@ -1544,11 +1544,14 @@ class CourseEnrollment(models.Model):
                 course_shift = CourseShift.get_course_shift_by_current_date(course_key)
 
             if course_shift:
-                course_shift_user = CourseShiftUser(
-                    course_key=course_key,
-                    course_shift=course_shift,
-                    user=user)
-                course_shift_user.save()
+                try:
+                    course_shift_user = CourseShiftUser(
+                        course_key=course_key,
+                        course_shift=course_shift,
+                        user=user)
+                    course_shift_user.save()
+                except IntegrityError:
+                    pass
 
         enrollment.send_signal(EnrollStatusChange.enroll)
 
@@ -1610,7 +1613,7 @@ class CourseEnrollment(models.Model):
         try:
             record = cls.objects.get(user=user, course_id=course_id)
             record.update_enrollment(is_active=False, skip_refund=skip_refund)
-
+            CourseShiftUser.objects.filter(user=user, course_key=course_id).delete()
         except cls.DoesNotExist:
             log.error(
                 u"Tried to unenroll student %s from %s but they were not enrolled",

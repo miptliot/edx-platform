@@ -238,9 +238,12 @@ class CourseOverview(TimeStampedModel):
         self.enrollment_end = self._init_enrollment_end
 
     def save(self, **kwargs):
-        self._return_init_dates()
-        super(CourseOverview, self).save(**kwargs)
-        self._set_course_shift_dates()
+        if self._course_shift:
+            self._return_init_dates()
+            super(CourseOverview, self).save(**kwargs)
+            self._set_course_shift_dates()
+        else:
+            super(CourseOverview, self).save(**kwargs)
 
     @classmethod
     def load_from_module_store(cls, course_id):

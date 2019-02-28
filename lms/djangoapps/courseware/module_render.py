@@ -795,6 +795,14 @@ def get_module_system_for_user(
     return system, field_data
 
 
+def start_value_is_set(descriptor):
+    if descriptor.category == 'sequential':
+        for field in descriptor.fields.values():
+            if field.name == 'start':
+                return field.is_set_on(descriptor)
+    return True
+
+
 # TODO: Find all the places that this method is called and figure out how to
 # get a loaded course passed into it
 def get_module_for_descriptor_internal(user, descriptor, student_data, course_id,  # pylint: disable=invalid-name
@@ -845,7 +853,7 @@ def get_module_for_descriptor_internal(user, descriptor, student_data, course_id
             usage_info_service = descriptor.runtime.service(descriptor, "usage_info")
             if usage_info_service:
                 descriptor.updated_course_shifts_dates = True
-                if hasattr(descriptor, 'start') and descriptor.start:
+                if start_value_is_set(descriptor) and hasattr(descriptor, 'start') and descriptor.start:
                     descriptor.start = usage_info_service.course_shift_date(descriptor.start)
                 if hasattr(descriptor, 'due') and descriptor.due:
                     descriptor.due = usage_info_service.course_shift_date(descriptor.due)
