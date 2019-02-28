@@ -11948,3 +11948,45 @@ msgstr ""
 #: cms/templates/js/video/transcripts/messages/transcripts-use-existing.underscore
 msgid "Use Current Transcript"
 msgstr "Использовать субтитры"
+
+msgid "Enrollment Start Date"
+msgstr "Начало записи"
+
+msgid "Enrollment End Date"
+msgstr "Конец записи"
+
+msgid "Studio version"
+msgstr "Версия из студии"
+
+msgid "Name field can't be empty"
+msgstr "Не задано обязательное поле 'Имя'"
+
+msgid "Start date field can't be empty"
+msgstr "Не задано обязательное поле 'Дата старта'"
+
+msgid "Start time field can't be empty"
+msgstr "Не задано обязательное поле 'Время старта'"
+
+msgid "Enrollment start date field can't be empty"
+msgstr "Не задано обязательное поле 'Дата начала записи'"
+
+msgid "Enrollment start time field can't be empty"
+msgstr "Не задано обязательное поле 'Время начала записи'"
+
+msgid "Enrollment end date field can't be empty"
+msgstr "Не задано обязательное поле 'Дата окончания записи'"
+
+msgid "Enrollment end time field can't be empty"
+msgstr "Не задано обязательное поле 'Время окончания записи'"
+
+msgid "Enrollment end date must be after the start date"
+msgstr "Время окончания записи должно быть позже времени старта записи"
+
+msgid "Start date must be later than the enrollment start date"
+msgstr "Время начала курса должно быть позже времени старта записи"
+
+msgid "User was found. User's shift is: "
+msgstr "Пользователь найден. Когорта пользователя: "
+
+msgid "User was successfully updated"
+msgstr "Пользователь успешно обновлён"
