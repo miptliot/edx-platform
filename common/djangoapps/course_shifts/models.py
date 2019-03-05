@@ -22,7 +22,7 @@ class CourseShift(models.Model):
     class Meta:
         db_table = 'course_shifts'
 
-    def to_dict(self, add_number_of_students=False, convert_dates_to_str=True):
+    def to_dict(self, add_number_of_students=False, convert_dates_to_str=True, add_students=False):
         data = {
             'id': self.id,
             'name': self.name,
@@ -32,7 +32,20 @@ class CourseShift(models.Model):
             'studio_version': self.studio_version
         }
         if add_number_of_students and self.id:
-            number_of_students = CourseShiftUser.objects.filter(course_key=self.course_key, course_shift=self).count()
+            q = CourseShiftUser.objects.filter(course_key=self.course_key, course_shift=self)
+            if add_students:
+                q = q.prefetch_related('user')
+                number_of_students = len(q)
+                students = []
+                for item in q:
+                    students.append({
+                        'id': item.user.id,
+                        'email': item.user.email,
+                        'username': item.user.username
+                    })
+                data['students'] = students
+            else:
+                number_of_students = q.count()
             data['number_of_students'] = number_of_students
         return data
 
@@ -89,6 +102,10 @@ class CourseShift(models.Model):
             if not users_shifts.get(k, False) and (k not in result or c.start_date < result[k]['start_date']):
                 result[k] = c.to_dict(convert_dates_to_str=False)
         return result
+
+    def is_enrollment_opened(self):
+        dt_now = timezone.now()
+        return self.enrollment_start_date <= dt_now <= self.enrollment_end_date
 
 
 class CourseShiftUser(models.Model):

@@ -204,7 +204,7 @@
             this.$el.find('.loading').show();
             $.ajax({
                 type: 'GET',
-                url: this.listCourseShiftsUrl,
+                url: this.listCourseShiftsUrl + '?add_students=0',
                 dataType : "json"
             }).success(function(response) {
                 self.courseShifts = [];

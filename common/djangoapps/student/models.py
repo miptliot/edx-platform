@@ -1489,6 +1489,22 @@ class CourseEnrollment(models.Model):
         """
         if mode is None:
             mode = _default_course_mode(text_type(course_key))
+
+        course_shift = None
+        course_shifts_enabled = settings.FEATURES.get("ENABLE_COURSE_SHIFTS", False)
+
+        if course_shifts_enabled:
+            if course_shift_id:
+                try:
+                    course_shift = CourseShift.objects.get(
+                        id=course_shift_id,
+                        enabled=True,
+                        course_key=course_key)
+                except CourseShift.DoesNotExist:
+                    pass
+            else:
+                course_shift = CourseShift.get_course_shift_by_current_date(course_key)
+
         # All the server-side checks for whether a user is allowed to enroll.
         try:
             course = CourseOverview.get_from_id(course_key, user)
@@ -1500,7 +1516,8 @@ class CourseEnrollment(models.Model):
                 raise NonExistentCourseError
 
         if check_access:
-            if cls.is_enrollment_closed(user, course):
+            if (course_shift and not course_shift.is_enrollment_opened())\
+                    or cls.is_enrollment_closed(user, course):
                 log.warning(
                     u"User %s failed to enroll in course %s because enrollment is closed",
                     user.username,
@@ -1529,29 +1546,15 @@ class CourseEnrollment(models.Model):
         enrollment = cls.get_or_create_enrollment(user, course_key)
         enrollment.update_enrollment(is_active=True, mode=mode)
 
-        if settings.FEATURES.get("ENABLE_COURSE_SHIFTS", False):
-            course_shift = None
-
-            if course_shift_id:
-                try:
-                    course_shift = CourseShift.objects.get(
-                        id=course_shift_id,
-                        enabled=True,
-                        course_key=course_key)
-                except CourseShift.DoesNotExist:
-                    pass
-            else:
-                course_shift = CourseShift.get_course_shift_by_current_date(course_key)
-
-            if course_shift:
-                try:
-                    course_shift_user = CourseShiftUser(
-                        course_key=course_key,
-                        course_shift=course_shift,
-                        user=user)
-                    course_shift_user.save()
-                except IntegrityError:
-                    pass
+        if course_shifts_enabled and course_shift:
+            try:
+                course_shift_user = CourseShiftUser(
+                    course_key=course_key,
+                    course_shift=course_shift,
+                    user=user)
+                course_shift_user.save()
+            except IntegrityError:
+                pass
 
         enrollment.send_signal(EnrollStatusChange.enroll)
 

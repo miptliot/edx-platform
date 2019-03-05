@@ -7,9 +7,11 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponseForbidden
 from django.utils.translation import ugettext as _
 from pytz import UTC
+from rest_framework_oauth.authentication import OAuth2Authentication
+from rest_framework.exceptions import APIException
+from openedx.core.lib.api.permissions import ApiKeyHeaderPermission
 
 from courseware.access import has_access
 from student.models import CourseEnrollment
@@ -24,28 +26,53 @@ from xmodule.modulestore.exceptions import ItemNotFoundError
 def check_course_exists(check_staff_permission=False):
     def check_course_exists(func):
         def wrapper(request, course_id):
+            course = None
             try:
                 course_key = CourseKey.from_string(course_id)
                 course = modulestore().get_course(course_key)
             except (InvalidKeyError, ItemNotFoundError):
-                return JsonResponse({"success": False, "errorMessage": _("Course not found")}, status=404)
+                pass
+
+            if not course:
+                return JsonResponse({"success": False, "error": "Course not found"}, status=404)
+
             if check_staff_permission:
-                allow = has_access(request.user, 'staff', course)
+                if ApiKeyHeaderPermission().has_permission(request, None):
+                    return func(request, course)
+                if request.user.is_authenticated:
+                    user = request.user
+                else:
+                    user = None
+                    msg = 'Invalid authorization params'
+                    try:
+                        auth_res = OAuth2Authentication().authenticate(request)
+                        if auth_res is not None:
+                            user = auth_res[0]
+                    except APIException as e:
+                        msg = msg + ': ' + str(e)
+                    if not user:
+                        return JsonResponse({"success": False, "error": msg}, status=403)
+
+                allow = has_access(user, 'staff', course)
                 if allow:
                     return func(request, course)
                 else:
-                    return HttpResponseForbidden()
+                    return JsonResponse({"success": False,
+                                         "error": 'User have no permissions to access the course'}, status=403)
             else:
                 return func(request, course)
         return wrapper
     return check_course_exists
 
 
-@login_required
 @check_course_exists(check_staff_permission=True)
 def get_course_shifts(request, course):
+    add_students = request.GET.get('add_students', '1') == '1'
     data = CourseShift.objects.filter(course_key=course.id).order_by('start_date', 'enrollment_start_date')
-    return JsonResponse({"success": True, "data": [item.to_dict(add_number_of_students=True) for item in data]})
+    return JsonResponse({
+        "success": True,
+        "data": [item.to_dict(add_number_of_students=True, add_students=add_students) for item in data]
+    })
 
 
 @login_required
