@@ -57,10 +57,28 @@
             this.ajaxUrl = this.el.data('ajax-url');
             this.nextUrl = this.el.data('next-url');
             this.prevUrl = this.el.data('prev-url');
+            this.involvementBlockType = this.el.data('involvement-block-type');
+            this.involvementIsEnabled = parseInt(this.el.data('involvement-is-enabled')) === 1;
+            this.userAllowInvolvement = parseInt(this.el.data('user-allow-involvement')) === 1;
+            this.userAllowInvolvementTitle = this.el.data('user-allow-involvement-title');
+            this.urlChangeInvolvement = this.el.data('url-change-involvement');
+            this.urlGetInvolvementToken = this.el.data('url-get-involvement_token');
+            this.involvementApiHost = this.el.data('involvement-api-host');
+            this.userInvolvementUpdateInProgress = false;
+            this.currentVerticalId = null;
+            this.contentLoaded = false;
             this.keydownHandler($(element).find('#sequence-list .tab'));
             this.base_page_title = ($('title').data('base-title') || '').trim();
             this.bind();
             this.render(parseInt(this.el.data('position'), 10));
+            this.displayHeaderInvolvementInfo();
+            this.defineCameraErrorHandler();
+
+            $(document).ready(function () {
+                self.contentLoaded = true;
+                self.updateInvolvementBlock((this.involvementBlockType === 'vertical')
+                    ? self.currentVerticalId : self.id);
+            });
         }
 
         Sequence.prototype.$ = function(selector) {
@@ -74,6 +92,90 @@
             this.el.on('bookmark:remove', this.removeBookmarkIconFromActiveNavItem);
             this.$('#sequence-list .nav-item').on('focus mouseenter', this.displayTabTooltip);
             this.$('#sequence-list .nav-item').on('blur mouseleave', this.hideTabTooltip);
+        };
+
+        Sequence.prototype.defineCameraErrorHandler = function() {
+            if (!window.console) {
+                window.console = {
+                    log: function() {},
+                    warn: function() {},
+                    error: function() {},
+                    debug: function() {}
+                };
+            }
+            var self = this;
+            var _error = window.console.error;
+            var involvementErrorMsg = gettext("Involvement function can't be enabled because of the error.");
+            if (this.involvementIsEnabled && this.userAllowInvolvement) {
+                window.console.error = function() {
+                    if ((arguments.length === 4)
+                     && (arguments[0] === 'Raven')
+                     && (arguments[2] === 'cameraError')) {
+                        self.el.html(involvementErrorMsg + '<br /><br />' + arguments[3]);
+                    }
+                    return _error.apply(window.console, arguments);
+                }
+            }
+        };
+
+        Sequence.prototype.displayHeaderInvolvementInfo = function() {
+            var self = this;
+            if (this.involvementIsEnabled && ($('.user-involvement-info').length > 0)) {
+                var icon = this.userAllowInvolvement ? 'fa-eye' : 'fa-eye-slash';
+                $('.user-involvement-info').css('display', 'inline-block')
+                    .html('<a href="javascript: void(0);" class="involvement-icon" title="' + this.userAllowInvolvementTitle + '"><i class="fa ' + icon + '" aria-hidden="true"></i></a>');
+                $('.involvement-icon').click(function() {
+                    if (!self.userInvolvementUpdateInProgress)
+                    self.userInvolvementUpdateInProgress = true;
+                    $.ajax({
+                        type: "POST",
+                        url: self.urlChangeInvolvement,
+                        dataType: "json",
+                        data: JSON.stringify({action: self.userAllowInvolvement ? 'skip' : 'allow'}),
+                        success: function(resp) {
+                            if (resp.continue) {
+                                location.reload();
+                            } else {
+                                self.userInvolvementUpdateInProgress = false;
+                            }
+                        },
+                        error: function() {
+                            self.userInvolvementUpdateInProgress = false;
+                        }
+                    });
+                });
+            }
+        };
+
+        Sequence.prototype.updateInvolvementBlock = function(usageId) {
+            var self = this;
+            if (this.involvementIsEnabled && this.userAllowInvolvement && this.contentLoaded) {
+                $.ajax({
+                    type: "POST",
+                    url: self.urlGetInvolvementToken,
+                    dataType: "json",
+                    data: JSON.stringify({blockId: usageId}),
+                    success: function(resp) {
+                        if (resp.involvement_enabled && resp.involvement_allowed
+                          && (((self.involvementBlockType === 'vertical') && (self.currentVerticalId === usageId))
+                              || (self.involvementBlockType === 'sequential'))
+                        ){
+                            var faceAnalyzerParams = {
+                                jwtToken: resp.token,
+                                videoElementId: 'involvementWebcamVideo',
+                                workerPath: '/sw.js',
+                                serverUrl: self.involvementApiHost
+                            };
+                            var faceAnalyzer = window.faceNLZ.prepare(faceAnalyzerParams);
+                            faceAnalyzer.then(function(x) {
+                                window.startNLZ = x.start;
+                                window.stopNLZ = x.pause;
+                                x.start();
+                            });
+                        }
+                    }
+                });
+            }
         };
 
         Sequence.prototype.previousNav = function(focused, index) {
@@ -268,6 +370,7 @@
                 // For embedded circuit simulator exercises in 6.002x
                 window.update_schematics();
                 this.position = newPosition;
+                this.currentVerticalId = this.link_for(this.position).data('id');
                 this.toggleArrows();
                 this.hookUpContentStateChangeEvent();
                 this.updatePageTitle();
@@ -275,6 +378,10 @@
                 sequenceLinks.click(this.goto);
 
                 this.sr_container.focus();
+
+                if (this.involvementBlockType === 'vertical') {
+                    this.updateInvolvementBlock(this.currentVerticalId);
+                }
             }
         };
 

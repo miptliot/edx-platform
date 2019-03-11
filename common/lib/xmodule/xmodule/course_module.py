@@ -31,6 +31,10 @@ CATALOG_VISIBILITY_CATALOG_AND_ABOUT = "both"
 CATALOG_VISIBILITY_ABOUT = "about"
 CATALOG_VISIBILITY_NONE = "none"
 
+INVOLVEMENT_DISABLED = "disabled"
+INVOLVEMENT_OPTIONAL = "optional"
+INVOLVEMENT_REQUIRED = "required"
+
 
 class StringOrDate(Date):
     def from_json(self, value):
@@ -867,6 +871,17 @@ class CourseFields(object):
         ),
         scope=Scope.settings,
         default=False
+    )
+
+    involvement = String(
+        display_name=_("Involvement"),
+        help=_('Available values: "disabled", "optional", "required"'),
+        default=INVOLVEMENT_DISABLED,
+        scope=Scope.settings,
+        values=[
+            {"display_name": _("Disabled"), "value": INVOLVEMENT_DISABLED},
+            {"display_name": _("Optional"), "value": INVOLVEMENT_OPTIONAL},
+            {"display_name": _("Required"), "value": INVOLVEMENT_REQUIRED}]
     )
 
 

@@ -1,0 +1,75 @@
+<%inherit file="main.html" />
+<%!
+from django.utils.translation import ugettext as _
+%>
+
+<%block name="pagetitle">${_("Allow involvement")}</%block>
+
+<%block name="js_extra">
+<script type="text/javascript">
+(function() {
+    var nextUrl = "${redirect_url}";
+    var canUpdate = true;
+
+    function updatePage() {
+        if (nextUrl) {
+            location.href = nextUrl;
+        } else {
+            location.reload();
+        }
+    }
+    $('.involvement-action-btn').click(function() {
+        if (canUpdate) {
+            canUpdate = false;
+            $.ajax({
+                type: "POST",
+                url: window.location.href,
+                dataType: "json",
+                data: JSON.stringify({action: $(this).data('action')}),
+                success: function(resp) {
+                    canUpdate = true;
+                    if (resp.continue) {
+                        updatePage();
+                    }
+                },
+                error: function() {
+                    canUpdate = true;
+                }
+            });
+        }
+    });
+})(this);
+</script>
+</%block>
+
+<%block name="headextra">
+<style>
+.involvement-action {
+    text-decoration: none !important;
+    color: #ffffff !important;
+    margin-right: 5px;
+}
+.involvement-content {
+    padding-bottom: 250px;
+}
+.involvement-actions {
+    padding-top: 20px;
+}
+</style>
+</%block>
+
+<div class="container" lang="ru">
+  <div class="course-wrapper" role="presentation">
+    <section class="course-content involvement-content" id="course-content">
+        ${involvement_msg}
+        <div class="form-actions involvement-actions">
+            <a data-action="allow" class="involvement-action-btn involvement-action btn btn-brand" href="javascript: void(0);">${_('Allow')}</a>
+            % if can_skip:
+            <a data-action="skip" class="involvement-action-btn involvement-action btn btn-brand" href="javascript: void(0);">${_('Skip this step')}</a>
+            % else:
+            <a class="involvement-action btn btn-brand" href="${course_outline_url}">${_('Return to the course outline')}</a>
+            % endif
+        </div>
+    </section>
+  </div>
+</div>

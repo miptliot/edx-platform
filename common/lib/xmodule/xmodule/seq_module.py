@@ -312,6 +312,14 @@ class SequenceModule(SequenceFields, ProctoringFields, XModule):
             'next_url': context.get('next_url'),
             'prev_url': context.get('prev_url'),
             'banner_text': banner_text,
+            'involvement_is_enabled': context.get('involvement_is_enabled'),
+            'involvement_type': context.get('involvement_type'),
+            'involvement_block_type': context.get('involvement_block_type'),
+            'involvement_api_host': context.get('involvement_api_host'),
+            'user_allow_involvement': context.get('user_allow_involvement'),
+            "user_allow_involvement_title": context.get('user_allow_involvement_title'),
+            'url_change_involvement': context.get('url_change_involvement'),
+            'url_get_involvement_token': context.get('url_get_involvement_token')
         }
         fragment.add_content(self.system.render_template("seq_module.html", params))
 
