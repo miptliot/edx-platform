@@ -59,7 +59,8 @@ setup(
             "milestones = lms.djangoapps.course_api.blocks.transformers.milestones:MilestonesAndSpecialExamsTransformer",
             "grades = lms.djangoapps.grades.transformer:GradesTransformer",
             "completion = lms.djangoapps.course_api.blocks.transformers.block_completion:BlockCompletionTransformer",
-            "load_override_data = lms.djangoapps.course_blocks.transformers.load_override_data:OverrideDataTransformer"
+            "load_override_data = lms.djangoapps.course_blocks.transformers.load_override_data:OverrideDataTransformer",
+            "course_shift_due_date = lms.djangoapps.course_blocks.transformers.course_shift_due_date:CourseShiftDueDateTransformer"
         ],
         "openedx.grading_policy": [
             "vertical = openedx.eduscaled.lms.grading_policy.vertical:VerticalGrading",

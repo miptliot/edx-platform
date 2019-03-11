@@ -1,0 +1,36 @@
+<%page args="section_data" expression_filter="h"/>
+<%!
+from django.utils.translation import ugettext as _
+%>
+
+<section class="course-shifts"
+         data-get-course-shifts-url="${section_data['get_course_shifts_url']}"
+         data-update-course-shifts-url="${section_data['update_course_shifts_url']}"
+         data-find-user-and-course-shifts-url="${section_data['find_user_and_course_shifts_url']}"
+         data-update-user-course-shift-url="${section_data['update_user_course_shift_url']}">
+    <form id="course-shifts" class="course-shifts" method="post" action="">
+        <div class="main-block">
+            <table class="main-table list-shifts"></table>
+            <hr>
+            <div class="users-shifts">
+                <div class="find-user">
+                    <div><label for="user-search-token">${_("Enter user's email or username:")}</label></div>
+                    <div><input type="text" class="user-search-token" name="user-search-token"
+                                id="user-search-token">
+                         <button type="button" class="search-user-and-shift">${_("Search")}</button>
+                    </div>
+                    <div class="user-search-error error-msg"></div>
+                    <div class="user-info"></div>
+                    <div class="user-actions">
+                        <label for="user-shift-selector">${_("Put into course shifts:")}</label>
+                        <select id="user-shift-selector" name="user-shift-selector">
+                        </select>
+                        <button type="button" class="change-user-shift">${_("Apply")}</button>
+                    </div>
+                    <div class="user-update-error error-msg"></div>
+                </div>
+            </div>
+        </div>
+        <div class="loading">${_("Loading...")}</div>
+    </form>
+</section>

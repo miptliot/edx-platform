@@ -40,14 +40,17 @@ class StartDateTransformer(FilteringTransformerMixin, BlockStructureTransformer)
         return "start_date"
 
     @classmethod
-    def _get_merged_start_date(cls, block_structure, block_key):
+    def _get_merged_start_date(cls, block_structure, block_key, usage_info):
         """
         Returns the merged value for the start date for the block with
         the given block_key in the given block_structure.
         """
-        return block_structure.get_transformer_block_field(
+        val = block_structure.get_transformer_block_field(
             block_key, cls, cls.MERGED_START_DATE, False
         )
+        if val:
+            return usage_info.course_shift_date(val)
+        return val
 
     @classmethod
     def collect(cls, block_structure):
@@ -75,7 +78,7 @@ class StartDateTransformer(FilteringTransformerMixin, BlockStructureTransformer)
         removal_condition = lambda block_key: not check_start_date(
             usage_info.user,
             block_structure.get_xblock_field(block_key, 'days_early_for_beta'),
-            self._get_merged_start_date(block_structure, block_key),
+            self._get_merged_start_date(block_structure, block_key, usage_info),
             usage_info.course_key,
         )
         return [block_structure.create_removal_filter(removal_condition)]

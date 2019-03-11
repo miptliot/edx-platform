@@ -26176,3 +26176,72 @@ msgstr ""
 #, python-brace-format
 msgid "\"Course {course_title}\" <{from_email}>"
 msgstr "\"Курс {course_title}\" <{from_email}>"
+
+msgid "Course not found"
+msgstr "Курс не найден"
+
+msgid "Invalid request"
+msgstr "Некорректный запрос"
+
+msgid "Some required fields were not passed"
+msgstr "Заданы не все обязательные поля"
+
+msgid "Invalid Course Shift ID format"
+msgstr "Некорретный формат ID когорты"
+
+msgid "Start date is invalid: "
+msgstr "Некорректное время начала курса: "
+
+msgid "Enrollment start date is invalid: "
+msgstr "Некорректное время начала записи: "
+
+msgid "Enrollment end date is invalid: "
+msgstr "Некорректное время окончания записи: "
+
+msgid "Enrollment end date must be later than the enrollment start date"
+msgstr "Время окончания записи должно быть позже времени старта записи"
+
+msgid "The course start date must be later than the enrollment start date"
+msgstr "Время начала курса должно быть позже времени старта записи"
+
+msgid "This shift can't be modified"
+msgstr "Данная когорта не может быть обновлена"
+
+msgid "Course shift was not found"
+msgstr "Когорта не найдена"
+
+msgid "Course shift not found"
+msgstr "Когорта не найдена"
+
+msgid "User must be enrolled to the course"
+msgstr "Пользователь должен быть записан на курс"
+
+msgid "Your deadlines were successfully updated"
+msgstr "Дедлайны были усмешно обновлены"
+
+msgid "There is no available shifts"
+msgstr "Нет доступных для записи когорт"
+
+msgid "Enable Course Shifts"
+msgstr "Включить когорты"
+
+msgid "Enable Student Change Course Shift"
+msgstr "Разрешить пользователям менять когорты самостоятельно"
+
+msgid "Course Shifts"
+msgstr "Когорты"
+
+msgid "Are you sure you want to reset deadlines?"
+msgstr "Вы уверены что хотите сбросить дедлайны?"
+
+msgid "Update Deadlines"
+msgstr "Сбросить дедлайны"
+
+msgid "Enter user's email or username:"
+msgstr "Введите имя пользователя или его email:"
+
+msgid "Put into course shifts:"
+msgstr "Переместить в когорту:"
+
+msgid "Loading..."
+msgstr "Загрузка..."

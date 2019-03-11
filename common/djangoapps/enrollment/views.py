@@ -595,6 +595,7 @@ class EnrollmentListView(APIView, ApiKeyPermissionMixIn):
 
         username = request.data.get('user', request.user.username)
         course_id = request.data.get('course_details', {}).get('course_id')
+        course_shift_id = request.data.get('course_shift_id', None)
 
         if not course_id:
             return Response(
@@ -726,7 +727,8 @@ class EnrollmentListView(APIView, ApiKeyPermissionMixIn):
                     unicode(course_id),
                     mode=mode,
                     is_active=is_active,
-                    enrollment_attributes=enrollment_attributes
+                    enrollment_attributes=enrollment_attributes,
+                    course_shift_id=course_shift_id
                 )
 
             email_opt_in = request.data.get('email_opt_in', None)

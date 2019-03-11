@@ -27,6 +27,7 @@ from capa.responsetypes import StudentInputError, ResponseError, LoncapaProblemE
 from capa.util import convert_files_to_filenames, get_inner_html_from_xpath
 from xblock.fields import Boolean, Dict, Float, Integer, Scope, String, XMLString
 from xblock.scorable import ScorableXBlockMixin, Score
+from xblock.exceptions import NoSuchServiceError
 from xmodule.capa_base_constants import RANDOMIZATION, SHOWANSWER
 from xmodule.exceptions import NotFoundError
 from xmodule.graders import ShowCorrectness
@@ -235,6 +236,14 @@ class CapaMixin(ScorableXBlockMixin, CapaFields):
         super(CapaMixin, self).__init__(*args, **kwargs)
 
         due_date = self.due
+
+        if due_date and self.service_declaration("usage_info"):
+            try:
+                usage_info_service = self.runtime.service(self, "usage_info")
+                if usage_info_service:
+                    due_date = usage_info_service.course_shift_date(due_date)
+            except NoSuchServiceError:
+                pass
 
         if self.graceperiod is not None and due_date:
             self.close_date = due_date + self.graceperiod

@@ -188,6 +188,16 @@ ${HTML(fragment.foot_html())}
                                 <span class="icon fa fa-angle-right" aria-hidden="true"></span>
                             % endif
                             <span class="nav-item nav-item-sequence">${sequence_title}</span>
+                            % if possibility_to_change_deadline:
+                            <a class="btn btn-primary course-shifts-update-deadlines"
+                               data-action-url="${course_shifts_update_deadlines_url}"
+                               data-question="${_('Are you sure you want to reset deadlines?')}"
+                               href="javascript: void(0);"
+                               style="float: right; padding: 4px 10px;">
+                                <span data-action-type="update-deadlines">${_("Update Deadlines")}</span>
+                            </a>
+                            <div style="clear: both;">
+                            % endif
                         </div>
                     </div>
                 </nav>

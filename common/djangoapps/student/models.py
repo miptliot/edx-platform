@@ -60,6 +60,7 @@ from courseware.models import (
     OrgDynamicUpgradeDeadlineConfiguration
 )
 from enrollment.api import _default_course_mode
+from course_shifts.models import CourseShift, CourseShiftUser
 
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangoapps.request_cache import clear_cache, get_cache
@@ -1452,7 +1453,7 @@ class CourseEnrollment(models.Model):
                 )
 
     @classmethod
-    def enroll(cls, user, course_key, mode=None, check_access=False):
+    def enroll(cls, user, course_key, mode=None, check_access=False, course_shift_id=None):
         """
         Enroll a user in a course. This saves immediately.
 
@@ -1488,9 +1489,25 @@ class CourseEnrollment(models.Model):
         """
         if mode is None:
             mode = _default_course_mode(text_type(course_key))
+
+        course_shift = None
+        course_shifts_enabled = settings.FEATURES.get("ENABLE_COURSE_SHIFTS", False)
+
+        if course_shifts_enabled:
+            if course_shift_id:
+                try:
+                    course_shift = CourseShift.objects.get(
+                        id=course_shift_id,
+                        enabled=True,
+                        course_key=course_key)
+                except CourseShift.DoesNotExist:
+                    pass
+            else:
+                course_shift = CourseShift.get_course_shift_by_current_date(course_key)
+
         # All the server-side checks for whether a user is allowed to enroll.
         try:
-            course = CourseOverview.get_from_id(course_key)
+            course = CourseOverview.get_from_id(course_key, user)
         except CourseOverview.DoesNotExist:
             # This is here to preserve legacy behavior which allowed enrollment in courses
             # announced before the start of content creation.
@@ -1499,7 +1516,8 @@ class CourseEnrollment(models.Model):
                 raise NonExistentCourseError
 
         if check_access:
-            if cls.is_enrollment_closed(user, course):
+            if (course_shift and not course_shift.is_enrollment_opened())\
+                    or cls.is_enrollment_closed(user, course):
                 log.warning(
                     u"User %s failed to enroll in course %s because enrollment is closed",
                     user.username,
@@ -1527,6 +1545,17 @@ class CourseEnrollment(models.Model):
         # User is allowed to enroll if they've reached this point.
         enrollment = cls.get_or_create_enrollment(user, course_key)
         enrollment.update_enrollment(is_active=True, mode=mode)
+
+        if course_shifts_enabled and course_shift:
+            try:
+                course_shift_user = CourseShiftUser(
+                    course_key=course_key,
+                    course_shift=course_shift,
+                    user=user)
+                course_shift_user.save()
+            except IntegrityError:
+                pass
+
         enrollment.send_signal(EnrollStatusChange.enroll)
 
         return enrollment
@@ -1587,7 +1616,7 @@ class CourseEnrollment(models.Model):
         try:
             record = cls.objects.get(user=user, course_id=course_id)
             record.update_enrollment(is_active=False, skip_refund=skip_refund)
-
+            CourseShiftUser.objects.filter(user=user, course_key=course_id).delete()
         except cls.DoesNotExist:
             log.error(
                 u"Tried to unenroll student %s from %s but they were not enrolled",
@@ -1695,11 +1724,10 @@ class CourseEnrollment(models.Model):
         """
         enrollments = list(cls.enrollments_for_user(user))
         overviews = CourseOverview.get_from_ids_if_exists(
-            enrollment.course_id for enrollment in enrollments
+            [enrollment.course_id for enrollment in enrollments], user
         )
         for enrollment in enrollments:
             enrollment._course_overview = overviews.get(enrollment.course_id)  # pylint: disable=protected-access
-
         return enrollments
 
     @classmethod
@@ -1893,6 +1921,8 @@ class CourseEnrollment(models.Model):
                     self._course_overview = CourseOverview.get_from_id(self.course_id)
                 except (CourseOverview.DoesNotExist, IOError):
                     self._course_overview = None
+        if self._course_overview:
+            self._course_overview.set_course_shift(user=self.user)
         return self._course_overview
 
     @cached_property

@@ -111,7 +111,7 @@ def get_course_overview_with_access(user, action, course_key, check_if_enrolled=
       or has staff access.
     """
     try:
-        course_overview = CourseOverview.get_from_id(course_key)
+        course_overview = CourseOverview.get_from_id(course_key, user)
     except CourseOverview.DoesNotExist:
         raise Http404("Course not found.")
     check_course_access(course_overview, user, action, check_if_enrolled)
@@ -370,16 +370,16 @@ def get_course_date_blocks(course, user):
     Return the list of blocks to display on the course info page,
     sorted by date.
     """
-    block_classes = (
-        CertificateAvailableDate,
-        CourseEndDate,
-        CourseStartDate,
-        TodaysDate,
-        VerificationDeadlineDate,
-        VerifiedUpgradeDeadlineDate,
-    )
+    course_overview = CourseOverview.get_from_id(course.id, user)
 
-    blocks = (cls(course, user) for cls in block_classes)
+    blocks = [
+        CertificateAvailableDate(course, user),
+        CourseEndDate(course_overview, user),
+        CourseStartDate(course_overview, user),
+        TodaysDate(course, user),
+        VerificationDeadlineDate(course, user),
+        VerifiedUpgradeDeadlineDate(course, user)
+    ]
 
     def block_key_fn(block):
         """
@@ -437,7 +437,7 @@ def get_courses(user, org=None, filter_=None):
     Returns a list of courses available, sorted by course.number and optionally
     filtered by org code (case-insensitive).
     """
-    courses = branding.get_visible_courses(org=org, filter_=filter_)
+    courses = branding.get_visible_courses(org=org, filter_=filter_, user=user)
 
     permission_name = configuration_helpers.get_value(
         'COURSE_CATALOG_VISIBILITY_PERMISSION',

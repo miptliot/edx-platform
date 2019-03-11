@@ -1557,7 +1557,7 @@ PIPELINE_CSS = {
             'js/vendor/CodeMirror/codemirror.css',
             'css/vendor/jquery.treeview.css',
             'css/vendor/ui-lightness/jquery-ui-1.8.22.custom.css',
-            'js/vendor/timepicker/jquery.timepicker.css',
+            'js/vendor/timepicker/jquery.timepicker.css'
         ],
         'output_filename': 'css/lms-style-course-vendor.css',
     },
@@ -2322,6 +2322,8 @@ INSTALLED_APPS = [
 
     # API Documentation
     'rest_framework_swagger',
+
+    'course_shifts',
 ]
 
 ######################### CSRF #########################################

@@ -819,8 +819,11 @@ def course_about(request, course_id):
         # Determine which checkout workflow to use -- LMS shoppingcart or Otto basket
         can_add_course_to_cart = _is_shopping_cart_enabled and registration_price and not ecommerce_checkout_link
 
+        # Overview
+        overview = CourseOverview.get_from_id(course.id, request.user)
+
         # Used to provide context to message to student if enrollment not allowed
-        can_enroll = bool(has_access(request.user, 'enroll', course))
+        can_enroll = bool(has_access(request.user, 'enroll', overview))
         invitation_only = course.invitation_only
         is_course_full = CourseEnrollment.objects.is_course_full(course)
 
@@ -834,9 +837,6 @@ def course_about(request, course_id):
 
         # get prerequisite courses display names
         pre_requisite_courses = get_prerequisite_courses_display(course)
-
-        # Overview
-        overview = CourseOverview.get_from_id(course.id)
 
         sidebar_html_enabled = course_experience_waffle().is_enabled(ENABLE_COURSE_ABOUT_SIDEBAR_HTML)
 
@@ -878,6 +878,7 @@ def course_about(request, course_id):
             'course_image_urls': overview.image_urls,
             'reviews_fragment_view': reviews_fragment_view,
             'sidebar_html_enabled': sidebar_html_enabled,
+            'overview': overview
         }
 
         return render_to_response('courseware/course_about.html', context)

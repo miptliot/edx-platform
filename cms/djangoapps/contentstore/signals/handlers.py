@@ -16,7 +16,10 @@ from openedx.core.lib.gating import api as gating_api
 from track.event_transaction_utils import get_event_transaction_id, get_event_transaction_type
 from util.module_utils import yield_dynamic_descriptor_descendants
 from .signals import GRADING_POLICY_CHANGED
+from xmodule.course_metadata_utils import DEFAULT_START_DATE
 from xmodule.modulestore.django import SignalHandler, modulestore
+from course_shifts.models import CourseShift
+from course_shifts.utils import course_shifts_enabled
 
 
 log = logging.getLogger(__name__)
@@ -63,6 +66,27 @@ def listen_for_course_publish(sender, course_key, **kwargs):  # pylint: disable=
         from contentstore.tasks import update_search_index
 
         update_search_index.delay(unicode(course_key), datetime.now(UTC).isoformat())
+
+    course = modulestore().get_course(course_key)
+    if course_shifts_enabled(course):
+        try:
+            course_shift = CourseShift.objects.get(course_key=course_key, studio_version=True)
+        except CourseShift.DoesNotExist:
+            course_slug = 'cs_%s_01' % course_key.course
+            course_shift = CourseShift(
+                course_key=course_key,
+                name=course_slug,
+                studio_version=True,
+                enabled=True
+            )
+        course_shift.start_date = course.start if course.start else DEFAULT_START_DATE
+        course_shift.enrollment_start_date = course.enrollment_start if course.enrollment_start \
+            else datetime(2019, 1, 1, tzinfo=UTC)
+        course_shift.enrollment_end_date = course.enrollment_end if course.enrollment_end else DEFAULT_START_DATE
+        course_shift.save()
+        CourseShift.objects.filter(course_key=course_key).update(enabled=True)
+    else:
+        CourseShift.objects.filter(course_key=course_key).update(enabled=False)
 
 
 @receiver(SignalHandler.library_updated)

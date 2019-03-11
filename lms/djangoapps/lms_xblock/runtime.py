@@ -9,6 +9,7 @@ import xblock.reference.plugins
 from badges.service import BadgingService
 from badges.utils import badges_enabled
 from lms.djangoapps.lms_xblock.models import XBlockAsidesConfig
+from lms.djangoapps.course_blocks.usage_info import CourseUsageInfo
 from openedx.core.djangoapps.user_api.course_tag import api as user_course_tag_api
 from openedx.core.lib.url_utils import quote_slashes
 from openedx.core.lib.xblock_utils import xblock_local_resource_url
@@ -149,6 +150,7 @@ class LmsModuleSystem(ModuleSystem):  # pylint: disable=abstract-method
         services['user_tags'] = UserTagsService(self)
         if badges_enabled():
             services['badging'] = BadgingService(course_id=kwargs.get('course_id'), modulestore=store)
+        services['usage_info'] = CourseUsageInfo(kwargs.get('course_id'), kwargs.get('user'))
         self.request_token = kwargs.pop('request_token', None)
         super(LmsModuleSystem, self).__init__(**kwargs)
 

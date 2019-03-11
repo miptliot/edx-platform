@@ -42,6 +42,7 @@ from openedx.opro.involvement.utils import involvement_is_enabled, get_user_invo
     EXAMUS_INVOLVEMENT_API_HOST
 from shoppingcart.models import CourseRegistrationCode
 from student.views import is_course_blocked
+from course_shifts.models import allow_to_change_deadline
 from util.views import ensure_valid_course_key
 from xmodule.modulestore.django import modulestore
 from xmodule.x_module import STUDENT_VIEW
@@ -367,6 +368,10 @@ class CoursewareIndex(View):
         course_url_name = default_course_url_name(self.course.id)
         course_url = reverse(course_url_name, kwargs={'course_id': unicode(self.course.id)})
 
+        possibility_to_change_deadline = False
+        if request.user.is_authenticated and self.course.enable_student_change_course_shift:
+            possibility_to_change_deadline, course_shift = allow_to_change_deadline(self.course.id, request.user)
+
         courseware_context = {
             'csrf': csrf(self.request)['csrf_token'],
             'course': self.course,
@@ -386,6 +391,9 @@ class CoursewareIndex(View):
             'section_title': None,
             'sequence_title': None,
             'disable_accordion': COURSE_OUTLINE_PAGE_FLAG.is_enabled(self.course.id),
+            'possibility_to_change_deadline': possibility_to_change_deadline,
+            'course_shifts_update_deadlines_url': reverse('update-deadlines-course-shift',
+                                                          kwargs={'course_id': unicode(self.course.id)})
         }
         courseware_context.update(
             get_experiment_user_metadata_context(
