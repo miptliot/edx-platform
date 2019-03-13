@@ -11,7 +11,7 @@ from xmodule.modulestore.django import modulestore
 
 
 @request_cached
-def get_course_outline_block_tree(request, course_id):
+def get_course_outline_block_tree(request, course_id, user=None):
     """
     Returns the root block of the course outline, with children as blocks.
     """
@@ -40,6 +40,7 @@ def get_course_outline_block_tree(request, course_id):
         """
         block['resume_block'] = False
         block['complete'] = False
+        block['completion_date'] = None
         for child in block.get('children', []):
             set_last_accessed_default(child)
 
@@ -52,9 +53,12 @@ def get_course_outline_block_tree(request, course_id):
         last_completed_child_position = BlockCompletion.get_latest_block_completed(user, course_key)
 
         if last_completed_child_position:
+            completion_iterable = BlockCompletion.user_course_completion_queryset(user, course_key)
+            course_block_completions = {completion.full_block_key: completion for completion in completion_iterable}
+
             # Mutex w/ NOT 'course_block_completions'
             recurse_mark_complete(
-                course_block_completions=BlockCompletion.get_course_completions(user, course_key),
+                course_block_completions=course_block_completions,
                 latest_completion=last_completed_child_position,
                 block=block
             )
@@ -76,8 +80,10 @@ def get_course_outline_block_tree(request, course_id):
         """
         block_key = block.serializer.instance
 
-        if course_block_completions.get(block_key):
+        compl = course_block_completions.get(block_key)
+        if compl and compl.completion:
             block['complete'] = True
+            block['completion_date'] = compl.modified
             if block_key == latest_completion.full_block_key:
                 block['resume_block'] = True
 
@@ -91,11 +97,19 @@ def get_course_outline_block_tree(request, course_id):
                 if block['children'][idx]['resume_block'] is True:
                     block['resume_block'] = True
 
-            completable_blocks = [child for child in block['children']
-                                  if child['type'] != 'discussion']
-            if len([child['complete'] for child in block['children']
-                    if child['complete']]) == len(completable_blocks):
+            completable_blocks = [child for child in block['children'] if child['type'] != 'discussion']
+            completed_blocks = [child for child in completable_blocks if child['complete']]
+
+            if len(completed_blocks) == len(completable_blocks):
                 block['complete'] = True
+                block['completion_date'] = get_max_completion_date(completed_blocks)
+
+    def get_max_completion_date(items):
+        arr = [item['completion_date'] for item in items if item['completion_date'] is not None]
+        if arr:
+            return max(arr)
+        else:
+            return None
 
     def mark_last_accessed(user, course_key, block):
         """
@@ -120,6 +134,8 @@ def get_course_outline_block_tree(request, course_id):
     course_key = CourseKey.from_string(course_id)
     course_usage_key = modulestore().make_course_usage_key(course_key)
 
+    requested_user = user if user else request.user
+
     # Deeper query for course tree traversing/marking complete
     # and last completed block
     block_types_filter = [
@@ -133,12 +149,13 @@ def get_course_outline_block_tree(request, course_id):
         'discussion',
         'drag-and-drop-v2',
         'poll',
-        'word_cloud'
+        'word_cloud',
+        'openassessment'
     ]
     all_blocks = get_blocks(
         request,
         course_usage_key,
-        user=request.user,
+        user=requested_user,
         nav_depth=3,
         requested_fields=[
             'children',
@@ -160,7 +177,7 @@ def get_course_outline_block_tree(request, course_id):
 
         mark_blocks_completed(
             block=course_outline_root_block,
-            user=request.user,
+            user=requested_user,
             course_key=course_key
         )
     return course_outline_root_block
