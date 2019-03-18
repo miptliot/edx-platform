@@ -1,5 +1,6 @@
 from tp import *
 
+from path import Path as path
 import os
 
 
@@ -155,6 +156,10 @@ SSO_API_URL = '%s/api-edx/' % SSO_TP_URL
 SOCIAL_AUTH_LOGOUT_URL = '%s/logout/' % SSO_TP_URL
 
 STATIC_ROOT_BASE = os.getenv('STATIC_ROOT_BASE', locals().get('STATIC_ROOT_BASE', '/edx/var/edxapp/datastore/staticfiles'))
+if STATIC_ROOT_BASE:
+    STATIC_ROOT = path(STATIC_ROOT_BASE)
+    WEBPACK_LOADER['DEFAULT']['STATS_FILE'] = STATIC_ROOT / 'webpack-stats.json'
+
 STATIC_URL_BASE = os.getenv('STATIC_URL_BASE', locals().get('STATIC_URL_BASE', '/static/'))
 
 TECH_SUPPORT_EMAIL = os.getenv('TECH_SUPPORT_EMAIL', locals().get('TECH_SUPPORT_EMAIL'))
