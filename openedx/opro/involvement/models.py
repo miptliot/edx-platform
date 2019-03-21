@@ -5,11 +5,13 @@ from openedx.core.djangoapps.xmodule_django.models import CourseKeyField, UsageK
 
 class InvolvementLink(models.Model):
     course_key = CourseKeyField(max_length=255, db_index=True)
-    usage_key = UsageKeyField(max_length=255, unique=True)
+    usage_key = UsageKeyField(max_length=255)
     block_type = models.CharField(max_length=32, null=False, blank=False)
     link_id = models.CharField(max_length=255, unique=True)
     user = models.ForeignKey(User)
 
+    class Meta(object):
+        unique_together = (('user', 'usage_key'),)
 
 class UserVisitInvolvementLink(models.Model):
     link = models.ForeignKey(InvolvementLink)
