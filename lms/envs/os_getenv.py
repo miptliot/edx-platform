@@ -129,7 +129,7 @@ LMS_ROOT_URL = os.getenv('LMS_ROOT_URL', locals().get('LMS_ROOT_URL', 'http://lo
 LOCAL_LOGLEVEL = os.getenv('LOCAL_LOGLEVEL', locals().get('LOCAL_LOGLEVEL', 'INFO'))
 LOGGING_ENV = os.getenv('LOGGING_ENV', locals().get('LOGGING_ENV', 'sandbox'))
 LOG_DIR = os.getenv('LOG_DIR', locals().get('LOG_DIR', '/edx/var/logs/edx'))
-MEDIA_ROOT = os.getenv('MEDIA_ROOT', locals().get('MEDIA_ROOT', '/edx/var/edxapp/datastore/media/'))
+MEDIA_ROOT = os.getenv('MEDIA_ROOT', locals().get('MEDIA_ROOT', '/edx/var/edxapp/datastore/'))
 MEDIA_URL = os.getenv('MEDIA_URL', locals().get('MEDIA_URL', '/media/'))
 
 TP_MAKO_TEMPLATES = os.getenv('TP_MAKO_TEMPLATES_LMS', '/edx/app/edxapp/venv/src/sso-edx-tp/sso_edx_tp/templates/lms')
