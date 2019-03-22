@@ -8,6 +8,7 @@ from django.conf.urls.static import static
 from django.contrib.admin import autodiscover as django_autodiscover
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.base import RedirectView
+from django.views.generic import TemplateView
 from rest_framework_swagger.views import get_swagger_view
 
 from branding import views as branding_views
@@ -189,6 +190,13 @@ favicon_path = configuration_helpers.get_value('favicon_path', settings.FAVICON_
 urlpatterns += [
     url(r'^favicon\.ico$', RedirectView.as_view(url=settings.STATIC_URL + favicon_path, permanent=True)),
 ]
+
+# service workers for involvement
+urlpatterns += (url(
+    r'^sw\.js',
+    (TemplateView.as_view(template_name="sw.js", content_type='application/javascript', )),
+    name='sw.js'
+),)
 
 # Multicourse wiki (Note: wiki urls must be above the courseware ones because of
 # the custom tab catch-all)
@@ -457,6 +465,12 @@ urlpatterns += [
         courseware_views.progress,
         name='student_progress',
     ),
+
+    url(
+        r'^courses/{}/involvement/'.format(
+            settings.COURSE_ID_PATTERN,
+        ),
+        include('openedx.opro.involvement.urls', namespace='involvement')),
 
     url(
         r'^programs/{}/about'.format(

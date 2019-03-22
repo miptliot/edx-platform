@@ -372,6 +372,14 @@ class SequenceModule(SequenceFields, ProctoringFields, XModule):
             'next_url': context.get('next_url'),
             'prev_url': context.get('prev_url'),
             'banner_text': banner_text,
+            'involvement_is_enabled': context.get('involvement_is_enabled'),
+            'involvement_type': context.get('involvement_type'),
+            'involvement_block_type': context.get('involvement_block_type'),
+            'involvement_api_host': context.get('involvement_api_host'),
+            'user_allow_involvement': context.get('user_allow_involvement'),
+            "user_allow_involvement_title": context.get('user_allow_involvement_title'),
+            'url_change_involvement': context.get('url_change_involvement'),
+            'url_get_involvement_token': context.get('url_get_involvement_token'),
             'disable_navigation': not self.is_user_authenticated(context),
             'gated_content': self._get_gated_content_info(prereq_met, prereq_meta_info)
         }

@@ -2313,6 +2313,8 @@ INSTALLED_APPS = [
     'openedx.features.learner_analytics',
     'openedx.features.portfolio_project',
 
+    'openedx.opro.involvement',
+
     'experiments',
 
     # DRF filters

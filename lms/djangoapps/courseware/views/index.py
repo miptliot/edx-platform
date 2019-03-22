@@ -37,6 +37,9 @@ from openedx.core.djangolib.markup import HTML, Text
 from openedx.features.course_experience import COURSE_OUTLINE_PAGE_FLAG, default_course_url_name
 from openedx.features.course_experience.views.course_sock import CourseSockFragmentView
 from openedx.features.enterprise_support.api import data_sharing_consent_required
+from openedx.opro.involvement.decorators import check_involvement
+from openedx.opro.involvement.utils import involvement_is_enabled, get_user_involvement, involvement_block_type,\
+    EXAMUS_INVOLVEMENT_API_HOST
 from shoppingcart.models import CourseRegistrationCode
 from student.views import is_course_blocked
 from util.views import ensure_valid_course_key
@@ -76,6 +79,7 @@ class CoursewareIndex(View):
     @method_decorator(cache_control(no_cache=True, no_store=True, must_revalidate=True))
     @method_decorator(ensure_valid_course_key)
     @method_decorator(data_sharing_consent_required)
+    @check_involvement
     def get(self, request, course_id, chapter=None, section=None, position=None):
         """
         Displays courseware accordion and associated content.  If course, chapter,
@@ -435,6 +439,28 @@ class CoursewareIndex(View):
                 table_of_contents['previous_of_active_section'],
                 table_of_contents['next_of_active_section'],
             )
+            involvement_enabled = involvement_is_enabled(self.course)
+            section_context['url_change_involvement'] = reverse('involvement:check-involvement',
+                                                                kwargs={'course_id': self.course.id})
+            section_context['url_get_involvement_token'] = reverse('involvement:get-involvement-token',
+                                                                   kwargs={'course_id': self.course.id})
+
+            courseware_context['involvement_is_enabled'] = involvement_enabled
+            section_context['involvement_is_enabled'] = involvement_enabled
+            section_context['involvement_block_type'] = involvement_block_type()
+            section_context['involvement_api_host'] = EXAMUS_INVOLVEMENT_API_HOST
+            if involvement_enabled:
+                involvement, user_allow_involvement = get_user_involvement(self.course.id, request.user)
+                courseware_context['user_allow_involvement'] = user_allow_involvement
+                section_context['user_allow_involvement'] = user_allow_involvement
+                section_context['involvement_type'] = self.course.involvement
+            else:
+                courseware_context['user_allow_involvement'] = False
+                section_context['user_allow_involvement'] = False
+                section_context['involvement_type'] = ''
+            section_context['user_allow_involvement_title'] = _("Involvement is enabled. Click to disable") \
+                if section_context['user_allow_involvement'] else _("Involvement is disabled. Click to enable")
+
             courseware_context['fragment'] = self.section.render(STUDENT_VIEW, section_context)
             if self.section.position and self.section.has_children:
                 self._add_sequence_title_to_context(courseware_context)

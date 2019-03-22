@@ -92,6 +92,7 @@ from openedx.features.course_experience.views.course_dates import CourseDatesFra
 from openedx.features.course_experience.waffle import ENABLE_COURSE_ABOUT_SIDEBAR_HTML
 from openedx.features.course_experience.waffle import waffle as course_experience_waffle
 from openedx.features.enterprise_support.api import data_sharing_consent_required
+from openedx.opro.involvement.utils import involvement_is_enabled, get_blocks_involvement, involvement_block_type
 from shoppingcart.utils import is_shopping_cart_enabled
 from student.models import CourseEnrollment, UserTestGroup
 from util.cache import cache, cache_if_anonymous
@@ -980,6 +981,26 @@ def _progress(request, course_key, student_id):
     # checking certificate generation configuration
     enrollment_mode, _ = CourseEnrollment.enrollment_mode_for_user(student, course_key)
 
+    involvement_enabled = involvement_is_enabled(course)
+    involvement_blocks_type = involvement_block_type()
+    blocks_involvement = {}
+    vertical_blocks_data = {}
+    if involvement_enabled:
+        blocks_involvement = get_blocks_involvement(course_key, request.user)
+        if involvement_blocks_type == 'vertical' or True:
+            vertical_blocks = modulestore().get_items(course_key, qualifiers={'category': 'vertical'})
+            for v in vertical_blocks:
+                parent_id = str(v.parent)
+                loc_id = str(v.location)
+                if loc_id in blocks_involvement:
+                    if parent_id not in vertical_blocks_data:
+                        vertical_blocks_data[str(v.parent)] = []
+                    vertical_blocks_data[parent_id].append({
+                        'block_id': str(v.location),
+                        'display_name': v.display_name,
+                        'url': blocks_involvement[loc_id]['url']
+                    })
+
     context = {
         'course': course,
         'courseware_summary': courseware_summary,
@@ -992,6 +1013,12 @@ def _progress(request, course_key, student_id):
         'credit_course_requirements': _credit_course_requirements(course_key, student),
         'certificate_data': _get_cert_data(student, course, enrollment_mode, course_grade),
         'progress_summary_template': getattr(course.grading, 'PROGRESS_SUMMARY_TEMPLATE', ''),
+        'involvement': {
+            'involvement_enabled': involvement_enabled,
+            'involvement_block_type': involvement_blocks_type,
+            'blocks_involvement': blocks_involvement,
+            'vertical_blocks_data': vertical_blocks_data
+        }
     }
     context.update(
         get_experiment_user_metadata_context(
