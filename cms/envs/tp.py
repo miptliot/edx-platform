@@ -101,3 +101,7 @@ if FEATURES['ENABLE_CMS_API']:
     )
 
 CUSTOM_THIRD_PARTY_AUTH_STRATEGY = 'sso_edx_tp.strategy.ConfigurationModelStrategy'
+
+INSTALLED_APPS += (
+    'sso_edx_tp',
+)
