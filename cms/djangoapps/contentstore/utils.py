@@ -23,6 +23,8 @@ from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.exceptions import ItemNotFoundError
 from xmodule.partitions.partitions_service import get_all_partitions_for_course
 
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
+
 log = logging.getLogger(__name__)
 
 
@@ -106,11 +108,13 @@ def get_lms_link_for_item(location, preview=False):
 
     # checks LMS_BASE value in site configuration for the given course_org_filter(org)
     # if not found returns settings.LMS_BASE
-    lms_base = SiteConfiguration.get_value_for_org(
-        location.org,
-        "LMS_BASE",
-        settings.LMS_BASE
-    )
+    lms_base = configuration_helpers.get_value('LMS_BASE', None)
+    if not lms_base:
+        lms_base = SiteConfiguration.get_value_for_org(
+            location.org,
+            "LMS_BASE",
+            settings.LMS_BASE
+        )
 
     if lms_base is None:
         return None
@@ -118,11 +122,13 @@ def get_lms_link_for_item(location, preview=False):
     if preview:
         # checks PREVIEW_LMS_BASE value in site configuration for the given course_org_filter(org)
         # if not found returns settings.FEATURES.get('PREVIEW_LMS_BASE')
-        lms_base = SiteConfiguration.get_value_for_org(
-            location.org,
-            "PREVIEW_LMS_BASE",
-            settings.FEATURES.get('PREVIEW_LMS_BASE')
-        )
+        lms_base = configuration_helpers.get_value('PREVIEW_LMS_BASE', None)
+        if not lms_base:
+            lms_base = SiteConfiguration.get_value_for_org(
+                location.org,
+                "PREVIEW_LMS_BASE",
+                settings.FEATURES.get('PREVIEW_LMS_BASE')
+            )
 
     return u"//{lms_base}/courses/{course_key}/jump_to/{location}".format(
         lms_base=lms_base,
