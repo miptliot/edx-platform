@@ -72,7 +72,6 @@
             this.bind();
             this.render(parseInt(this.el.data('position'), 10));
             this.displayHeaderInvolvementInfo();
-            this.defineCameraErrorHandler();
 
             $(document).ready(function () {
                 self.contentLoaded = true;
@@ -92,30 +91,6 @@
             this.el.on('bookmark:remove', this.removeBookmarkIconFromActiveNavItem);
             this.$('#sequence-list .nav-item').on('focus mouseenter', this.displayTabTooltip);
             this.$('#sequence-list .nav-item').on('blur mouseleave', this.hideTabTooltip);
-        };
-
-        Sequence.prototype.defineCameraErrorHandler = function() {
-            if (!window.console) {
-                window.console = {
-                    log: function() {},
-                    warn: function() {},
-                    error: function() {},
-                    debug: function() {}
-                };
-            }
-            var self = this;
-            var _error = window.console.error;
-            var involvementErrorMsg = gettext("Involvement function can't be enabled because of the error.");
-            if (this.involvementIsEnabled && this.userAllowInvolvement) {
-                window.console.error = function() {
-                    if ((arguments.length === 4)
-                     && (arguments[0] === 'Raven')
-                     && (arguments[2] === 'cameraError')) {
-                        self.el.html(involvementErrorMsg + '<br /><br />' + arguments[3]);
-                    }
-                    return _error.apply(window.console, arguments);
-                }
-            }
         };
 
         Sequence.prototype.displayHeaderInvolvementInfo = function() {
@@ -166,11 +141,14 @@
                                 workerPath: '/sw.js',
                                 serverUrl: self.involvementApiHost
                             };
+                            var involvementErrorMsg = gettext("Involvement function can't be enabled because of the error.");
                             var faceAnalyzer = window.faceNLZ.prepare(faceAnalyzerParams);
                             faceAnalyzer.then(function(x) {
                                 window.startNLZ = x.start;
                                 window.stopNLZ = x.pause;
                                 x.start();
+                            }).catch(function(e) {
+                                self.el.html(involvementErrorMsg + '<br /><br />' + e);
                             });
                         }
                     }

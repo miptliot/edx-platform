@@ -1,42 +1,36 @@
-const CACHE_NAME = 'faceNLZ-cache-v1';
-let urlsToCache = [
-    '/wasm/20190123/cybert.data',
-    '/wasm/20190123/cybert.wasm'
-];
+var CACHE_NAME = 'faceNLZ-cache-v1';
+var urlsToCache = ['/wasm/20190326/cybert.data', '/wasm/20190326/cybert.wasm'];
 
-self.addEventListener('activate', event => {
-    event.waitUntil(clients.claim())
+self.addEventListener('activate', function (event) {
+    event.waitUntil(clients.claim());
 });
 
-self.addEventListener('fetch', function(event) {
-    let path = new URL(event.request.url).pathname;
+self.addEventListener('fetch', function (event) {
+    var path = new URL(event.request.url).pathname;
 
     if (!urlsToCache.includes(path)) {
-        return
+        return;
     }
 
-    event.respondWith(
-        caches
-            .match(event.request)
-            .then(response => {
-                if (response) { return response }
+    event.respondWith(caches.match(event.request).then(function (response) {
+        if (response) {
+            return response;
+        }
 
-                let fetchRequest = event.request.clone();
+        var fetchRequest = event.request.clone();
 
-                return fetch(fetchRequest).then(response => {
-                    if(!response || response.status !== 200) {
-                        return response
-                    }
+        return fetch(fetchRequest).then(function (response) {
+            if (!response || response.status !== 200) {
+                return response;
+            }
 
-                    let responseToCache =
-                        response.clone();
+            var responseToCache = response.clone();
 
-                    caches.open(CACHE_NAME)
-                        .then(cache =>
-                            cache.put(event.request, responseToCache));
+            caches.open(CACHE_NAME).then(function (cache) {
+                return cache.put(event.request, responseToCache);
+            });
 
-                    return response
-                })
-            })
-    )
+            return response;
+        });
+    }));
 });
