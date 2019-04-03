@@ -139,6 +139,7 @@ OAUTH_OIDC_ISSUER = os.getenv('OAUTH_OIDC_ISSUER', locals().get('OAUTH_OIDC_ISSU
 
 ORA2_FILEUPLOAD_BACKEND = os.getenv('ORA2_FILEUPLOAD_BACKEND', locals().get('ORA2_FILEUPLOAD_BACKEND', 'filesystem'))
 ORA2_FILE_PREFIX = os.getenv('ORA2_FILE_PREFIX', locals().get('ORA2_FILE_PREFIX', 'ora2'))
+ORA2_FILEUPLOAD_CACHE_NAME = os.getenv('ORA2_FILEUPLOAD_CACHE_NAME', locals().get('ORA2_FILEUPLOAD_CACHE_NAME', 'ora2_cache'))
 PAYMENT_SUPPORT_EMAIL = os.getenv('PAYMENT_SUPPORT_EMAIL', locals().get('PAYMENT_SUPPORT_EMAIL'))
 
 PLATFORM_NAME = os.getenv('PLATFORM_NAME', locals().get('PLATFORM_NAME'))
@@ -347,6 +348,7 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', locals().get('EMAIL_HOST_USER'))
 EVMS_API_KEY = os.getenv('EVMS_API_KEY', locals().get('EVMS_API_KEY', '123456'))
 EDX_API_KEY = os.getenv('EDX_API_KEY', locals().get('EDX_API_KEY', '123456'))
 PLP_API_KEY = os.getenv('PLP_API_KEY', locals().get('PLP_API_KEY', '123456'))
+SSO_API_KEY = os.getenv('SSO_API_KEY', locals().get('SSO_API_KEY', '123456'))
 SSO_API_TOKEN = os.getenv('SSO_API_TOKEN', locals().get('SSO_API_TOKEN', '123456'))
 
 REDIRECT_IS_HTTPS = str(os.getenv('REDIRECT_IS_HTTPS', True)) == 'True'

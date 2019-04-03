@@ -144,6 +144,7 @@ OAUTH_OIDC_ISSUER = os.getenv('OAUTH_OIDC_ISSUER', locals().get('OAUTH_OIDC_ISSU
 
 ORA2_FILEUPLOAD_BACKEND = os.getenv('ORA2_FILEUPLOAD_BACKEND', locals().get('ORA2_FILEUPLOAD_BACKEND', 'filesystem'))
 ORA2_FILE_PREFIX = os.getenv('ORA2_FILE_PREFIX', locals().get('ORA2_FILE_PREFIX', 'ora2'))
+ORA2_FILEUPLOAD_CACHE_NAME = os.getenv('ORA2_FILEUPLOAD_CACHE_NAME', locals().get('ORA2_FILEUPLOAD_CACHE_NAME', 'ora2_cache'))
 
 PLATFORM_NAME = os.getenv('PLATFORM_NAME', locals().get('PLATFORM_NAME'))
 PLP_URL = os.getenv('PLP_URL', locals().get('PLP_URL'))
