@@ -308,6 +308,15 @@ class CourseEmail(Email):
         return True if self.get_delay() else False
 
 
+class CourseEmailSite(models.Model):
+    class Meta(object):
+        app_label = "bulk_email"
+
+    course_email = models.OneToOneField(CourseEmail, primary_key=True,
+                                        related_name="email_from_site")
+    site_id = models.IntegerField()
+
+
 class Optout(models.Model):
     """
     Stores users that have opted out of receiving emails from a course.
