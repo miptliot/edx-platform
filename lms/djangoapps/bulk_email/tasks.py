@@ -118,7 +118,8 @@ def _get_course_email_context(course):
         settings.LMS_ROOT_URL,
         course_root
     )
-    image_url = u'{}{}'.format(settings.LMS_ROOT_URL, course_image_url(course))
+    lms_root_url = configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL)
+    image_url = u'{}{}'.format(lms_root_url, course_image_url(course))
     email_context = {
         'course_title': course_title,
         'course_root': course_root,
@@ -126,11 +127,32 @@ def _get_course_email_context(course):
         'course_url': course_url,
         'course_image_url': image_url,
         'course_end_date': course_end_date,
-        'account_settings_url': '{}{}'.format(settings.LMS_ROOT_URL, reverse('account_settings')),
-        'email_settings_url': '{}{}'.format(settings.LMS_ROOT_URL, reverse('dashboard')),
+        'account_settings_url': '{}{}'.format(lms_root_url, reverse('account_settings')),
+        'email_settings_url': '{}{}'.format(lms_root_url, reverse('dashboard')),
         'platform_name': configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME),
     }
     return email_context
+
+
+def _get_email_site_obj(email_id):
+    course_email_site = None
+    site_obj = None
+    execution_on_worker = not getattr(settings, 'CELERY_ALWAYS_EAGER', False)
+
+    if execution_on_worker:
+        try:
+            course_email_site = CourseEmailSite.objects.get(course_email__id=email_id)
+        except CourseEmailSite.DoesNotExist:
+            pass
+
+        if course_email_site:
+            try:
+                site_obj = Site.objects.get(id=course_email_site.site_id)
+            except Site.DoesNotExist:
+                pass
+    log.info('get_email_site_obj: email_id %s, site_id %s, execution_on_worker %s'
+             % (str(email_id), str(site_obj.id if site_obj else None), str(execution_on_worker)))
+    return site_obj
 
 
 def perform_delegate_email_batches(entry_id, course_id, task_input, action_name):
@@ -163,6 +185,10 @@ def perform_delegate_email_batches(entry_id, course_id, task_input, action_name)
         # is submitted and reaches this point.
         log.warning(u"Task %s: Failed to get CourseEmail with id %s", task_id, email_id)
         raise
+
+    site_obj = _get_email_site_obj(email_id)
+    if site_obj:
+        set_current_request(FakeRequest(site_obj))
 
     # Check to see if email batches have already been defined.  This seems to
     # happen sometimes when there is a loss of connection while a task is being
@@ -243,6 +269,9 @@ def perform_delegate_email_batches(entry_id, course_id, task_input, action_name)
         total_recipients,
     )
 
+    if site_obj:
+        set_current_request(None)
+
     # We want to return progress here, as this is what will be stored in the
     # AsyncResult for the parent task as its return value.
     # The AsyncResult will then be marked as SUCCEEDED, and have this return value as its "result".
@@ -304,21 +333,7 @@ def send_course_email(entry_id, email_id, to_list, global_email_context, subtask
     # To deal with that, we need to confirm that the task has not already been completed.
     check_subtask_is_valid(entry_id, current_task_id, subtask_status)
 
-    course_email_site = None
-    site_obj = None
-    execution_on_worker = not getattr(settings, 'CELERY_ALWAYS_EAGER', False)
-
-    if execution_on_worker:
-        try:
-            course_email_site = CourseEmailSite.objects.get(course_email__id=email_id)
-        except CourseEmailSite.DoesNotExist:
-            pass
-
-        if course_email_site:
-            try:
-                site_obj = Site.objects.get(id=course_email_site.site_id)
-            except Site.DoesNotExist:
-                pass
+    site_obj = _get_email_site_obj(email_id)
 
     send_exception = None
     new_subtask_status = None
@@ -528,8 +543,9 @@ def _send_course_email(entry_id, email_id, to_list, global_email_context, subtas
     course_language = global_email_context['course_language']
 
     # use the email from address in the CourseEmail, if it is present, otherwise compute it
-    from_addr = course_email.from_addr if course_email.from_addr else \
-        _get_source_address(course_email.course_id, course_title, course_language)
+    src_address = _get_source_address(course_email.course_id, course_title, course_language)
+    from_addr = course_email.from_addr if course_email.from_addr else src_address
+    log.info('send_course_email: %s, src_address: %s, from_addr: %s' % (str(email_id), str(src_address), str(from_addr)))
 
     if course_language:
         activate_language(course_language)
