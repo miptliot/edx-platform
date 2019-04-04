@@ -546,7 +546,7 @@ def _send_course_email(entry_id, email_id, to_list, global_email_context, subtas
     # use the email from address in the CourseEmail, if it is present, otherwise compute it
     src_address = _get_source_address(course_email.course_id, course_title, course_language)
     from_addr = course_email.from_addr if course_email.from_addr else src_address
-    log.info('send_course_email: %s, src_address: %s, from_addr: %s' % (str(email_id), str(src_address), str(from_addr)))
+    log.info('send_course_email: %s, src_address: %s, from_addr: %s' % (str(email_id), src_address, from_addr))
 
     if course_language:
         activate_language(course_language)
