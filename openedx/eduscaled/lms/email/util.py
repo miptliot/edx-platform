@@ -3,6 +3,7 @@ import base64
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 
 User = get_user_model()
@@ -51,8 +52,12 @@ def eduscaled_email(html_msg, plaintext_msg, email, course_email, course_title, 
 
 
 def eduscaled_format_address(course_title_no_quotes):
+    email_from_address = configuration_helpers.get_value(
+        'email_from_address',
+        settings.BULK_EMAIL_DEFAULT_FROM_EMAIL
+    )
     from_addr = _('"Course {course_title}" <{from_email}>').format(
             course_title=course_title_no_quotes,
-            from_email=settings.BULK_EMAIL_DEFAULT_FROM_EMAIL
+            from_email=email_from_address
     )
     return from_addr
