@@ -101,6 +101,7 @@ BULK_EMAIL_FAILURE_ERRORS = (
 
 class FakeRequest(object):
     site = None
+    META = {}
 
     def __init__(self, site):
         self.site = site
@@ -215,6 +216,9 @@ def perform_delegate_email_batches(entry_id, course_id, task_input, action_name)
     targets = email_obj.targets.all()
     global_email_context = _get_course_email_context(course)
 
+    if site_obj:
+        set_current_request(None)
+
     recipient_qsets = [
         target.get_users(course_id, user_id)
         for target in targets
@@ -268,9 +272,6 @@ def perform_delegate_email_batches(entry_id, course_id, task_input, action_name)
         settings.BULK_EMAIL_EMAILS_PER_TASK,
         total_recipients,
     )
-
-    if site_obj:
-        set_current_request(None)
 
     # We want to return progress here, as this is what will be stored in the
     # AsyncResult for the parent task as its return value.
