@@ -2300,7 +2300,7 @@ def list_email_content(request, course_id):  # pylint: disable=unused-argument
 @cache_control(no_cache=True, no_store=True, must_revalidate=True)
 @require_level('staff')
 def list_scheduled_emails(request, course_id):
-    course_id = CourseKey.from_deprecated_string(course_id)
+    course_id = CourseKey.from_string(course_id)
     task_type = 'bulk_course_email'
     emails = lms.djangoapps.instructor_task.api.get_instructor_task_history(course_id, task_type=task_type)
     data = [item for item in map(extract_email_features, emails) if item['delay_time']]
@@ -2319,7 +2319,7 @@ def remove_scheduled_email(request, course_id):
     result = True
     error = ''
 
-    course_id = CourseKey.from_deprecated_string(course_id)
+    course_id = CourseKey.from_string(course_id)
     msg_id = request.POST.get('msg-id', None)
     try:
         msg_id = int(msg_id) if msg_id else None

@@ -34,19 +34,21 @@ def eduscaled_email(html_msg, plaintext_msg, email, course_email, course_title, 
     unsubscribe_hash = base64.b64encode("{username}+{course_id}".format(
         username=username, course_id=course_email.course_id.html_id())
     )
-    unsubscribe_url = '%s%s' % ("{}/unsubscribe/".format(settings.PLP_URL), unsubscribe_hash)
-    unsubscribe_headers['List-Unsubscribe'] = '<{}>'.format(unsubscribe_url)
+    plp_url = getattr(settings, 'PLP_URL', None)
+    if plp_url:
+        unsubscribe_url = '%s%s' % ("{}/unsubscribe/".format(plp_url), unsubscribe_hash)
+        unsubscribe_headers['List-Unsubscribe'] = '<{}>'.format(unsubscribe_url)
 
-    html_msg = _('''{html_msg} For unsubscribe follow
-    <a href="{unsubscribe_url}">this link.</a>''').format(
-        html_msg=html_msg,
-        unsubscribe_url=unsubscribe_url
-    )
-    plaintext_msg = _('''{plaintext_msg} For unsubscribe follow
-    this link {unsubscribe_url}.''').format(
-        plaintext_msg=plaintext_msg,
-        unsubscribe_url=unsubscribe_url
-    )
+        html_msg = _('''{html_msg} For unsubscribe follow
+        <a href="{unsubscribe_url}">this link.</a>''').format(
+            html_msg=html_msg,
+            unsubscribe_url=unsubscribe_url
+        )
+        plaintext_msg = _('''{plaintext_msg} For unsubscribe follow
+        this link {unsubscribe_url}.''').format(
+            plaintext_msg=plaintext_msg,
+            unsubscribe_url=unsubscribe_url
+        )
 
     return html_msg, plaintext_msg, unsubscribe_headers
 
