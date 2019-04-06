@@ -119,6 +119,7 @@ FILE_UPLOAD_STORAGE_BUCKET_NAME = os.getenv('FILE_UPLOAD_STORAGE_BUCKET_NAME', l
 FILE_UPLOAD_STORAGE_PREFIX = os.getenv('FILE_UPLOAD_STORAGE_PREFIX', locals().get('FILE_UPLOAD_STORAGE_PREFIX', 'submissions_attachments'))
 FOOTER_ORGANIZATION_IMAGE = os.getenv('FOOTER_ORGANIZATION_IMAGE', locals().get('FOOTER_ORGANIZATION_IMAGE', 'images/logo.png'))
 GITHUB_REPO_ROOT = os.getenv('GITHUB_REPO_ROOT', locals().get('GITHUB_REPO_ROOT', '/edx/var/edxapp/datastore/data'))
+DATA_DIR = os.getenv('DATA_DIR', locals().get('DATA_DIR', '/edx/var/edxapp/datastore/data'))
 
 LANGUAGE_CODE = os.getenv('LANGUAGE_CODE', locals().get('LANGUAGE_CODE', 'ru'))
 LMS_BASE = os.getenv('LMS_BASE', locals().get('LMS_BASE', 'localhost'))
