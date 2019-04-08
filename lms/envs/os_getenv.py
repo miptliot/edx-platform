@@ -315,9 +315,11 @@ if GRADES_DOWNLOAD.get('STORAGE_CLASS') == 'storages.backends.s3boto.S3BotoStora
         "calling_format": AWS_S3_CALLING_FORMAT,
         "location": "grades",
         "acl": "private",
-        "custom_domain": "",
+        "custom_domain": AWS_S3_CUSTOM_DOMAIN,
         "bucket": AWS_STORAGE_BUCKET_NAME,
     }
+    GRADES_DOWNLOAD["BUCKET"] = AWS_STORAGE_BUCKET_NAME
+    GRADES_DOWNLOAD["CUSTOM_DOMAIN"] = AWS_S3_CUSTOM_DOMAIN
 
 MODULESTORE = {
     "default": {
