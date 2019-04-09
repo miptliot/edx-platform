@@ -1,4 +1,4 @@
-# 8f30d943273a84ddb4106d6cf5adf20e95e1cedc
+# de6936eef47868a8298f854a912dcecc13e55aad
 -e git+https://github.com/miptliot/tp-sso-edx-client.git@master#egg=sso_edx_tp
 -e git+https://github.com/miptliot/open_edx_api_extension_cms.git@ginkgo#egg=open_edx_api_extension_cms
 -e git+https://github.com/miptliot/open_edx_api_extension.git@ginkgo_dev#egg=open_edx_api_extension
