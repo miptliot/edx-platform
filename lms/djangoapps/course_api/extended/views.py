@@ -196,16 +196,19 @@ def ora_studets_progress(request, course):
                     'status': str(item.status),
                     'feedback_text': feedback_dict[submission_uuid],
                     'score': 0,
-                    'score_text': None
+                    'score_text': None,
+                    'responses_from_other': [],
+                    'my_responses': []
                 })
                 if submission_uuid in submissions_uuid_to_score:
                     score = submissions_uuid_to_score[submission_uuid]
                     student_info['score'] = score.to_float()
                     student_info['score_text'] = str(score.points_earned) + '/' + str(score.points_possible)
-                student_info['responses_from_other'] = peer_assessments_dict[item.item_id]['submissions']\
-                    .get(submission_uuid, [])
-                student_info['my_responses'] = peer_assessments_dict[item.item_id]['users']\
-                    .get(student_info['anonymous_user_id'], [])
+                if item.item_id in peer_assessments_dict:
+                    student_info['responses_from_other'] = peer_assessments_dict[item.item_id]['submissions']\
+                        .get(submission_uuid, [])
+                    student_info['my_responses'] = peer_assessments_dict[item.item_id]['users']\
+                        .get(student_info['anonymous_user_id'], [])
                 users_lst.append(student_info)
 
         result.append({
