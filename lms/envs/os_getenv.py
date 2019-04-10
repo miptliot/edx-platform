@@ -255,7 +255,7 @@ DATABASES = {
         "HOST": os.getenv('DATABASES__default__HOST', '127.0.0.1'),
         "NAME": os.getenv('DATABASES__default__db', 'edx'),
         "PASSWORD": os.getenv('DATABASES__default__password', ''),
-        "PORT": "3306",
+        "PORT": os.getenv('DATABASES__default__port', "3306"),
         "USER": os.getenv('DATABASES__default__user', 'edx')
     },
     "read_replica": {
@@ -264,7 +264,7 @@ DATABASES = {
         "HOST": os.getenv('DATABASES__read_replica__HOST', '127.0.0.1'),
         "NAME": os.getenv('DATABASES__read_replica__db', 'edx'),
         "PASSWORD": os.getenv('DATABASES__read_replica__password', ''),
-        "PORT": "3306",
+        "PORT": os.getenv('DATABASES__read_replica__port', "3306"),
         "USER": os.getenv('DATABASES__read_replica__user', 'edx')
     },
     "student_module_history": {
@@ -273,7 +273,7 @@ DATABASES = {
         "HOST": os.getenv('DATABASES__student_module_history__HOST', '127.0.0.1'),
         "NAME":  os.getenv('DATABASES__student_module_history__db', 'edx_csmh'),
         "PASSWORD": os.getenv('DATABASES__student_module_history__password', ''),
-        "PORT": "3306",
+        "PORT": os.getenv('DATABASES__student_module_history__port', "3306"),
         "USER":  os.getenv('DATABASES__student_module_history__user', 'edx')
     }
 }
