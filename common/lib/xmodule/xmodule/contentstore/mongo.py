@@ -297,15 +297,13 @@ class MongoContentStore(ContentStore):
                 }
             })
 
-        items = self.fs_files.aggregate(pipeline_stages)
-        if items['result']:
-            result = items['result'][0]
+        # fix for mongo 3.6.x    
+        count = 0
+        assets = []
+        items = self.fs_files.aggregate(pipeline_stages,cursor= {"batchSize": 0 })
+        for result in items:
             count = result['count']
             assets = list(result['results'])
-        else:
-            # no results
-            count = 0
-            assets = []
 
         # We're constructing the asset key immediately after retrieval from the database so that
         # callers are insulated from knowing how our identifiers are stored.
