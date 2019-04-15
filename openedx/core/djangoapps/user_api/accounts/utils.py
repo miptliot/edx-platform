@@ -164,9 +164,7 @@ def retrieve_last_sitewide_block_completed(username):
     if not candidate_course:
         return
 
-    lms_root = SiteConfiguration.get_value_for_org(candidate_course.org, "LMS_ROOT_URL",
-                                                   configuration_helpers.get_value('LMS_ROOT_URL',
-                                                                                   settings.LMS_ROOT_URL))
+    lms_root = configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL)
 
     try:
         item = modulestore().get_item(candidate_block_key, depth=1)
