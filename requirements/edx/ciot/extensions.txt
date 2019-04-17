@@ -3,5 +3,5 @@
 -e git+https://github.com/miptliot/open_edx_api_extension_cms.git@hawthorn#egg=open_edx_api_extension_cms
 -e git+https://github.com/miptliot/open_edx_api_extension.git@hawthorn_dev#egg=open_edx_api_extension
 
--e git+https://github.com/miptliot/video_evms.git@master#egg=video_evms
+-e git+https://github.com/miptliot/video_evms.git@b0690d6ce03c7c2fdc777e68d02be752c0b8638d#egg=video_evms
 -e git+https://github.com/raccoongang/xblock-video.git@dev#egg=video_xblock
