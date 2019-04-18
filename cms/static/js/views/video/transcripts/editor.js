@@ -38,7 +38,8 @@ function($, Backbone, _, Utils, MetadataView, MetadataCollection) {
             // when basic tabs renders. We trigger `basicTabFieldChanged` event
             // in `video_url` field but that event triggers before event is
             // actually binded
-            this.handleFieldChanged();
+            // TODO: OP-929 fix handleFieldChanged for evms
+            // this.handleFieldChanged();
         },
 
         /**
