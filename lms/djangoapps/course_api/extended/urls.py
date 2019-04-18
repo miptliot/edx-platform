@@ -1,9 +1,9 @@
-
 """
 Course Block API URLs
 """
 from django.conf import settings
 from django.conf.urls import url
+
 from .views import course_completion, course_progress, ora_studets_progress, course_enrollments, user_enrollments
 
 
