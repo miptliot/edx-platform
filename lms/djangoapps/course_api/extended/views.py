@@ -1,11 +1,17 @@
+from django.conf import settings
 from django.contrib.auth.models import User
-from openedx.core.lib.api.course_exists import check_course_exists
+from django.urls import reverse
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
+from openedx.core.lib.api.course_exists import check_course_exists, check_staff_permission
 from openedx.features.course_experience.utils import get_course_outline_block_tree
 from util.json_request import JsonResponse
 
 from lms.djangoapps.course_api.blocks.api import get_blocks
 from lms.djangoapps.grades.course_grade_factory import CourseGradeFactory
 from courseware.user_state_client import DjangoXBlockUserStateClient
+from course_shifts.models import CourseShiftUser
+from course_shifts.utils import course_shifts_enabled
+from student.models import CourseEnrollment
 from xmodule.modulestore.django import modulestore
 
 from openassessment.assessment.api.peer import PEER_TYPE
@@ -219,6 +225,64 @@ def ora_studets_progress(request, course):
         })
 
     return JsonResponse(sorted(result, key=lambda k: k['display_name']))
+
+
+@check_course_exists(check_staff_permission=True)
+def course_enrollments(request, course):
+    enrollments = CourseEnrollment.objects.filter(course_id=course.id, is_active=1).select_related('user')
+    course_shifts_users_dict = {}
+    if course_shifts_enabled(course):
+        course_shifts_users = CourseShiftUser.objects.filter(course_key=course.id).select_related('course_shift')
+        for csu in course_shifts_users:
+            course_shifts_users_dict[csu.user_id] = csu.course_shift.to_dict()
+
+    result = []
+    for enrollment in enrollments:
+        result.append({
+            'user_id': enrollment.user.id,
+            'username': enrollment.user.username,
+            'email': enrollment.user.email,
+            'first_name': enrollment.user.first_name,
+            'last_name': enrollment.user.last_name,
+            'mode': enrollment.mode,
+            'created': str(enrollment.created),
+            'course_shift': course_shifts_users_dict.get(enrollment.user.id)
+        })
+
+    return JsonResponse({
+        "success": True,
+        "error": None,
+        "data": result
+    })
+
+
+@check_staff_permission
+def user_enrollments(request):
+    user, response = _get_user(request)
+    if not user:
+        return response
+
+    result = []
+    enrollments = CourseEnrollment.enrollments_for_user_with_overviews_preload(user)
+    for enrollment in enrollments:
+        course_overview = enrollment.course_overview
+        if course_overview:
+            lms_url = configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL)
+            course_url = lms_url + reverse('openedx.course_experience.course_home',
+                                           kwargs={'course_id': str(course_overview.id)})
+            result.append({
+                'course_id': str(course_overview.id),
+                'course_url': course_url,
+                'display_name': course_overview.display_name,
+                'org': course_overview.org,
+                'mode': enrollment.mode
+            })
+
+    return JsonResponse({
+        "success": True,
+        "error": None,
+        "data": result
+    })
 
 
 def _get_float_value(val):

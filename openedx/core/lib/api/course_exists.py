@@ -11,7 +11,7 @@ from xmodule.modulestore.exceptions import ItemNotFoundError
 
 
 def check_course_exists(check_staff_permission=False):
-    def check_course_exists(func):
+    def check_course_exists_inner(func):
         def wrapper(request, course_id):
             course = None
             try:
@@ -24,29 +24,43 @@ def check_course_exists(check_staff_permission=False):
                 return JsonResponse({"success": False, "error": "Course not found"}, status=404)
 
             if check_staff_permission:
-                if ApiKeyHeaderPermission().has_permission(request, None):
-                    return func(request, course)
-                if request.user.is_authenticated:
-                    user = request.user
-                else:
-                    user = None
-                    msg = 'Invalid authorization params'
-                    try:
-                        auth_res = OAuth2Authentication().authenticate(request)
-                        if auth_res is not None:
-                            user = auth_res[0]
-                    except APIException as e:
-                        msg = msg + ': ' + str(e)
-                    if not user:
-                        return JsonResponse({"success": False, "error": msg}, status=403)
-
-                allow = has_access(user, 'staff', course)
-                if allow:
-                    return func(request, course)
-                else:
-                    return JsonResponse({"success": False,
-                                         "error": 'User have no permissions to access the course'}, status=403)
+                return _check_staff_permission(func, request, course)
             else:
                 return func(request, course)
         return wrapper
-    return check_course_exists
+    return check_course_exists_inner
+
+
+def check_staff_permission(func):
+    def wrapper(request):
+        return _check_staff_permission(func, request)
+    return wrapper
+
+
+def _check_staff_permission(func, request, course=None):
+    if ApiKeyHeaderPermission().has_permission(request, None):
+        return func(request, course) if course else func(request)
+    if request.user.is_authenticated:
+        user = request.user
+    else:
+        user = None
+        msg = 'Invalid authorization params'
+        try:
+            auth_res = OAuth2Authentication().authenticate(request)
+            if auth_res is not None:
+                user = auth_res[0]
+        except APIException as e:
+            msg = msg + ': ' + str(e)
+        if not user:
+            return JsonResponse({"success": False, "error": msg}, status=403)
+
+    if course:
+        allow = has_access(user, 'staff', course)
+    else:
+        allow = user.is_staff or user.is_superuser
+    if allow:
+        return func(request, course) if course else func(request)
+    else:
+        return JsonResponse({"success": False,
+                             "error": 'User have no permissions to access the API'}, status=403)
+
