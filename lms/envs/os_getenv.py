@@ -118,7 +118,7 @@ FEATURES['ENABLE_SPECIAL_EXAMS'] = str(os.getenv('FEATURES__ENABLE_SPECIAL_EXAMS
 FEATURES['ENABLE_SYSADMIN_DASHBOARD'] = str(os.getenv('FEATURES__ENABLE_SYSADMIN_DASHBOARD', False)) == 'True'
 FEATURES['ENABLE_THIRD_PARTY_AUTH'] = str(os.getenv('FEATURES__ENABLE_THIRD_PARTY_AUTH', True)) == 'True'
 FEATURES['ENABLE_COURSE_SHIFTS'] = str(os.getenv('FEATURES__ENABLE_COURSE_SHIFTS', False)) == 'True'
-FEATURES['EVMS_QUALITY_CONTROL_ON'] = str(os.getenv('FEATURES__AEVMS_QUALITY_CONTROL_ON', False)) == 'True'
+FEATURES['EVMS_QUALITY_CONTROL_ON'] = str(os.getenv('FEATURES__EVMS_QUALITY_CONTROL_ON', False)) == 'True'
 FEATURES['EVMS_TURN_ON'] = str(os.getenv('FEATURES__EVMS_TURN_ON', False)) == 'True'
 FEATURES['INDIVIDUAL_DUE_DATES'] = str(os.getenv('FEATURES__INDIVIDUAL_DUE_DATES', True)) == 'True'
 FEATURES['USE_CUSTOM_THEME'] = str(os.getenv('FEATURES__USE_CUSTOM_THEME', False)) == 'True'
@@ -427,6 +427,7 @@ if RAVEN_DSN:
         print 'could not enable Raven!'
 # =====================================
 
+EVMS_API_KEY = os.getenv('EVMS_API_KEY', locals().get('EVMS_API_KEY', '123456'))
 EDX_API_KEY = os.getenv('EDX_API_KEY', locals().get('EDX_API_KEY', '123456'))
 PLP_API_KEY = os.getenv('PLP_API_KEY', locals().get('PLP_API_KEY', '123456'))
 SSO_API_KEY = os.getenv('SSO_API_KEY', locals().get('SSO_API_KEY', '123456'))
