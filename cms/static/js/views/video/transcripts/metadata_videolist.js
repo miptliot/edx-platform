@@ -56,10 +56,69 @@ function($, Backbone, _, AbstractEditor, Utils, MessageManager) {
             AbstractEditor.prototype.render
                 .apply(this, arguments);
 
+            this.$allowPostRender = true;
             this.$extraVideosBar = this.$el.find('.videolist-extra-videos');
 
             // Check current state of Timed Transcripts.
             Backbone.trigger('transcripts:basicTabFieldChanged');
+        },
+
+        postRender: function() {
+            // "render" method from the "ginkgo" version
+            // was removed in "hawthorn"
+            // required for EVMS
+
+            if (!this.$allowPostRender) {
+                return;
+            }
+            this.$allowPostRender = false;
+
+            var self = this,
+                component_locator = this.$el.closest('[data-locator]').data('locator'),
+                videoList = this.getVideoObjectsList(),
+
+                showServerError = function(response) {
+                    var errorMessage = response.status ||
+                        gettext('Error: Connection with server failed.');
+
+                    self.messenger
+                        .render('not_found')
+                        .showError(
+                            errorMessage,
+                            true // hide buttons
+                        );
+                };
+
+            if (videoList.length === 0) {
+                this.messenger
+                    .render('not_found')
+                    .showError(
+                        gettext('No sources'),
+                        true // hide buttons
+                    );
+
+                return void(0);
+            }
+
+            // Check current state of Timed Transcripts.
+            Utils.command('check', component_locator, videoList)
+                .done(function(resp) {
+                    var params = resp,
+                        len = videoList.length,
+                        mode = (len === 1) ? videoList[0].mode : false;
+
+                    // If there are more than 1 video or just html5 source is
+                    // passed, video sources box should expand
+                    if (len > 1 || mode === 'html5') {
+                        self.openExtraVideosBar();
+                    } else {
+                        self.closeExtraVideosBar();
+                    }
+
+                    self.messenger.render(resp.command, params);
+                    self.checkIsUniqVideoTypes();
+                })
+                .fail(showServerError);
         },
 
         updateOnCheckTranscriptSuccess: function(videoList, response) {

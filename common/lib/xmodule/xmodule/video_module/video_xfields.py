@@ -184,6 +184,12 @@ class VideoFields(object):
         scope=Scope.settings,
         default="",
     )
+    edx_video_id_random = Boolean(
+        help=_("Random generated video id (during transcript creation)"),
+        display_name=_("Random generated video id"),
+        scope=Scope.settings,
+        default=False,
+    )
     bumper_last_view_date = DateTime(
         display_name=_("Date of the last view of the bumper"),
         scope=Scope.preferences,

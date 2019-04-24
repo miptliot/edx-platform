@@ -20,7 +20,7 @@ from django.utils.translation import ugettext as _
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import UsageKey
 from six import text_type
-from edxval.api import create_or_update_video_transcript, create_external_video
+from edxval.api import create_or_update_video_transcript, create_video, create_external_video, is_video_available
 from student.auth import has_course_author_access
 from util.json_request import JsonResponse
 from xmodule.contentstore.content import StaticContent
@@ -86,6 +86,7 @@ def link_video_to_component(video_component, user):
     if not edx_video_id:
         edx_video_id = create_external_video(display_name=u'external video')
         video_component.edx_video_id = edx_video_id
+        video_component.edx_video_id_random = True
         video_component.save_with_metadata(user)
 
     return edx_video_id
@@ -176,8 +177,9 @@ def validate_transcript_upload_data(request):
         error = _(u'A transcript file is required.')
     elif os.path.splitext(files['transcript-file'].name)[1][1:] != Transcript.SRT:
         error = _(u'This transcript file type is not supported.')
-    elif 'edx_video_id' not in data:
-        error = _(u'Video ID is required.')
+    # EVMS fix: allow to pass transcripts without edx_video_id
+    #elif 'edx_video_id' not in data:
+    #    error = _(u'Video ID is required.')
 
     if not error:
         error, video = validate_video_module(request, video_locator)
@@ -213,6 +215,7 @@ def upload_transcripts(request):
         if not edx_video_id:
             edx_video_id = create_external_video(display_name=u'external video')
             video.edx_video_id = edx_video_id
+            video.edx_video_id_random = True
             video.save_with_metadata(request.user)
 
         response = JsonResponse({'edx_video_id': edx_video_id, 'status': 'Success'}, status=200)
@@ -225,6 +228,20 @@ def upload_transcripts(request):
                 input_format=Transcript.SRT,
                 output_format=Transcript.SJSON
             )
+
+            # EVMS fix: additional check and forcible creation video object
+            video_available = is_video_available(edx_video_id)
+            if not video_available:
+                video_data = {
+                    "edx_video_id": edx_video_id,
+                    "client_video_id": edx_video_id,
+                    "duration": 0,
+                    "status": "external",
+                    "encoded_videos": [],
+                    "courses": [],
+                }
+                create_video(video_data)
+
             transcript_created = create_or_update_video_transcript(
                 video_id=edx_video_id,
                 language_code=u'en',

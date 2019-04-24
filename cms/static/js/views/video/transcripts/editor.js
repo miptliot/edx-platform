@@ -38,8 +38,7 @@ function($, Backbone, _, Utils, MetadataView, MetadataCollection) {
             // when basic tabs renders. We trigger `basicTabFieldChanged` event
             // in `video_url` field but that event triggers before event is
             // actually binded
-            // TODO: OP-929 fix handleFieldChanged for evms
-            // this.handleFieldChanged();
+            this.handleFieldChanged();
         },
 
         /**
@@ -209,7 +208,9 @@ function($, Backbone, _, Utils, MetadataView, MetadataCollection) {
 
         handleUpdateEdxVideoId: function(edxVideoId) {
             var edxVideoIdField = Utils.getField(this.collection, 'edx_video_id');
-            edxVideoIdField.setValue(edxVideoId);
+            if (edxVideoIdField) {
+                edxVideoIdField.setValue(edxVideoId);
+            }
         },
 
         getLocator: function() {
@@ -223,18 +224,48 @@ function($, Backbone, _, Utils, MetadataView, MetadataCollection) {
             var views = this.settingsView.views,
                 videoURLSView = views.video_url,
                 edxVideoIdView = views.edx_video_id,
-                edxVideoIdData = edxVideoIdView.getData(),
+                edxDropdownVideoIdView = views.edx_dropdown_video_id,
+                edxVideoIdData = null,
                 videoURLsData = videoURLSView.getVideoObjectsList(),
-                data = videoURLsData.concat(edxVideoIdData),
-                locator = this.getLocator();
+                locator = this.getLocator(),
+                dropdownVideoField = null,
+                dropdownVideoFieldValue = null,
+                data = null;
 
-            Utils.command('check', locator, data)
-                .done(function(response) {
-                    videoURLSView.updateOnCheckTranscriptSuccess(videoURLsData, response);
-                })
-                .fail(function(response) {
-                    videoURLSView.showServerError(response);
-                });
+            if (edxVideoIdView) {
+                edxVideoIdData = edxVideoIdView.getData();
+            } else if (edxDropdownVideoIdView) {
+                dropdownVideoField = Utils.getField(this.collection, 'edx_dropdown_video_id');
+                dropdownVideoFieldValue = dropdownVideoField.getValue();
+                if (dropdownVideoFieldValue) {
+                    edxVideoIdData = [{
+                        mode: 'edx_video_id',
+                        type: 'edx_video_id',
+                        video: dropdownVideoFieldValue
+                    }];
+                }
+            } else {
+                console.error('edx_video_id was not found');
+                return;
+            }
+
+            if (videoURLsData.length > 0) {
+                if (edxVideoIdData) {
+                    data = videoURLsData.concat(edxVideoIdData);
+                } else {
+                    data = videoURLsData;
+                }
+
+                Utils.command('check', locator, data)
+                    .done(function(response) {
+                        videoURLSView.updateOnCheckTranscriptSuccess(videoURLsData, response);
+                    })
+                    .fail(function(response) {
+                        videoURLSView.showServerError(response);
+                    });
+            } else {
+                videoURLSView.postRender();
+            }
         },
 
         destroy: function() {
