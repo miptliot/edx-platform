@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -125,7 +127,7 @@ def ora_studets_progress(request, course):
 
     submissions = Submission.objects.filter(uuid__in=submissions_uuid_short_list).select_related('student_item')
     for s in submissions:
-        uuid_str = str(s.uuid)
+        uuid_str = str(uuid.UUID(str(s.uuid)))
         if s.student_item.student_id not in student_ids_dict:
             student_ids_dict[s.student_item.student_id] = {}
         if uuid_str not in submissions_dict:
