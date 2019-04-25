@@ -107,7 +107,8 @@ def course_progress(request, course):
 @check_course_exists(check_staff_permission=True)
 def ora_studets_progress(request, course):
     openassessment_blocks = modulestore().get_items(course.id, qualifiers={'category': 'openassessment'})
-    assessment_workflow_data = AssessmentWorkflow.objects.filter(course_id=str(course.id))
+    assessment_workflow_data = AssessmentWorkflow.objects.filter(course_id=str(course.id))\
+            .exclude(status__in=['cancelled'])
 
     submissions_uuid_list = []
     submissions_uuid_short_list = []
