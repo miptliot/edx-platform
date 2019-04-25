@@ -136,7 +136,8 @@ def ora_studets_progress(request, course):
         if uuid_str not in submissions_id_to_uuid:
             submissions_id_to_uuid[s.id] = uuid_str
 
-    scores = Score.objects.filter(submission_id__in=submissions_id_to_uuid.keys()).select_related('submission')
+    scores = Score.objects.filter(submission_id__in=submissions_id_to_uuid.keys()).order_by('created_at')\
+            .select_related('submission')
     for score in scores:
         submissions_uuid_to_score[submissions_id_to_uuid[score.submission.id]] = score
 
@@ -144,8 +145,7 @@ def ora_studets_progress(request, course):
     for feedback_item in feedback_data:
         feedback_dict[str(feedback_item.submission_uuid)] = feedback_item.feedback_text
 
-    users = AnonymousUserId.objects.filter(course_id=course.id, anonymous_user_id__in=student_ids_dict.keys())\
-        .select_related('user')
+    users = AnonymousUserId.objects.filter(course_id=course.id).select_related('user')
     for u in users:
         student_ids_dict[u.anonymous_user_id] = {
             'username': u.user.username,
