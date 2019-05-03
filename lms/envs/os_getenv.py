@@ -483,3 +483,9 @@ CMS_SOCIAL_AUTH_SSO_TP_OAUTH2_KEY = os.getenv('CMS_SOCIAL_AUTH_SSO_TP_OAUTH2_KEY
 CMS_SOCIAL_AUTH_SSO_TP_OAUTH2_SECRET = os.getenv('CMS_SOCIAL_AUTH_SSO_TP_OAUTH2_SECRET', '7b0523e206ab8061e5235d116a31fed1a3cabec6')
 
 PDF_RENDER_BIN = os.getenv('PDF_RENDER_BIN', locals().get('PDF_RENDER_BIN', 'wkhtmltopdf'))
+
+SYSLOG_USE_TCP = str(os.getenv('SYSLOG_USE_TCP', locals().get('SYSLOG_USE_TCP', False))) == 'True'
+SYSLOG_HOST = os.getenv('SYSLOG_HOST', locals().get('SYSLOG_HOST', ''))
+SYSLOG_PORT = int(os.getenv('SYSLOG_PORT', locals().get('SYSLOG_PORT', 0)))
+SYSLOG_SOCKET_TIMEOUT = float(os.getenv('SYSLOG_SOCKET_TIMEOUT', locals().get('SYSLOG_SOCKET_TIMEOUT', 0)))
+
