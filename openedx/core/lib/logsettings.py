@@ -1,15 +1,65 @@
 """Get log settings."""
 
 import logging
-import os
+import socket
 import platform
 import sys
 import warnings
-from logging.handlers import SysLogHandler
+from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT
 
 from django.conf import settings
 
 LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+
+
+class ExtendedSysLogHandler(logging.handlers.SysLogHandler):
+
+    def __init__(self, address=('localhost', SYSLOG_UDP_PORT),
+                 facility=logging.handlers.SysLogHandler.LOG_USER,
+                 socktype=None,
+                 socktimeout=0):
+        self.socktimeout = socktimeout
+        super(ExtendedSysLogHandler, self).__init__(address=address, facility=facility, socktype=socktype)
+        if self.socktimeout > 0:
+            self.socket.settimeout(self.socktimeout)
+
+    def emit(self, record):
+        """
+        Emit a record.
+
+        The record is formatted, and then sent to the syslog server. If
+        exception information is present, it is NOT sent to the server.
+        """
+        try:
+            msg = self.format(record) + '\000'
+            """
+            We need to convert record level to lowercase, maybe this will
+            change in the future.
+            """
+            prio = '<%d>' % self.encodePriority(self.facility,
+                                                self.mapPriority(record.levelname))
+            # Message is a string. Convert to bytes as required by RFC 5424
+            if type(msg) is unicode:
+                msg = msg.encode('utf-8')
+            msg = prio + msg
+            try:
+                if self.unixsocket:
+                    try:
+                        self.socket.send(msg)
+                    except socket.error:
+                        self.socket.close() # See issue 17981
+                        self._connect_unixsocket(self.address)
+                        self.socket.send(msg)
+                elif self.socktype == socket.SOCK_DGRAM:
+                    self.socket.sendto(msg, self.address)
+                else:
+                    self.socket.sendall(msg)
+            except socket.error, exc:
+                sys.stderr.write("Socket error during send log message: %s" % exc)
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
 
 
 def get_logger_config(log_dir,
@@ -37,6 +87,21 @@ def get_logger_config(log_dir,
                      "- %(message)s").format(service_variant=service_variant,
                                              logging_env=logging_env,
                                              hostname=hostname)
+
+    syslog_use_tcp = False
+    syslog_host = ''
+    syslog_port = 0
+    syslog_socket_timeout = 0
+
+    if hasattr(settings, 'SYSLOG_USE_TCP'):
+        syslog_use_tcp = getattr(settings, 'SYSLOG_USE_TCP')
+    if hasattr(settings, 'SYSLOG_HOST'):
+        syslog_host = getattr(settings, 'SYSLOG_HOST')
+    if hasattr(settings, 'SYSLOG_PORT'):
+        syslog_port = int(getattr(settings, 'SYSLOG_PORT'))
+    syslog_port = syslog_port if syslog_port > 0 else SYSLOG_UDP_PORT
+    if hasattr(settings, 'SYSLOG_SOCKET_TIMEOUT'):
+        syslog_socket_timeout = float(getattr(settings, 'SYSLOG_SOCKET_TIMEOUT'))
 
     logger_config = {
         'version': 1,
@@ -68,17 +133,21 @@ def get_logger_config(log_dir,
             },
             'local': {
                 'level': local_loglevel,
-                'class': 'logging.handlers.SysLogHandler',
-                'address': '/dev/log',
+                'class': 'openedx.core.lib.logsettings.ExtendedSysLogHandler',
+                'address': (syslog_host, syslog_port) if syslog_host else '/dev/log',
                 'formatter': 'syslog_format',
                 'facility': SysLogHandler.LOG_LOCAL0,
+                'socktype': socket.SOCK_STREAM if syslog_use_tcp else socket.SOCK_DGRAM,
+                'socktimeout': syslog_socket_timeout
             },
             'tracking': {
                 'level': 'DEBUG',
-                'class': 'logging.handlers.SysLogHandler',
-                'address': '/dev/log',
+                'class': 'openedx.core.lib.logsettings.ExtendedSysLogHandler',
+                'address': (syslog_host, syslog_port) if syslog_host else '/dev/log',
                 'facility': SysLogHandler.LOG_LOCAL1,
                 'formatter': 'raw',
+                'socktype': socket.SOCK_STREAM if syslog_use_tcp else socket.SOCK_DGRAM,
+                'socktimeout': syslog_socket_timeout
             },
         },
         'loggers': {

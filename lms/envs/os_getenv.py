@@ -450,3 +450,9 @@ EXAMUS_INVOLVEMENT_TOKEN_NAME = os.getenv('EXAMUS_INVOLVEMENT_TOKEN_NAME', 'repl
 EXAMUS_INVOLVEMENT_TOKEN_SECRET = os.getenv('EXAMUS_INVOLVEMENT_TOKEN_SECRET', 'replace-me')
 EXAMUS_INVOLVEMENT_API_HOST = os.getenv('EXAMUS_INVOLVEMENT_API_HOST', 'https://faceNLZ.dev.examus.net')
 EXAMUS_INVOLVEMENT_CHARTS_HOST = os.getenv('EXAMUS_INVOLVEMENT_CHARTS_HOST', 'https://cdn.facenlz.examus.net')
+
+SYSLOG_USE_TCP = str(os.getenv('SYSLOG_USE_TCP', locals().get('SYSLOG_USE_TCP', False))) == 'True'
+SYSLOG_HOST = os.getenv('SYSLOG_HOST', locals().get('SYSLOG_HOST', ''))
+SYSLOG_PORT = int(os.getenv('SYSLOG_PORT', locals().get('SYSLOG_PORT', 0)))
+SYSLOG_SOCKET_TIMEOUT = float(os.getenv('SYSLOG_SOCKET_TIMEOUT', locals().get('SYSLOG_SOCKET_TIMEOUT', 0)))
+
