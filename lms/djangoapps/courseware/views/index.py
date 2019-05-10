@@ -372,6 +372,11 @@ class CoursewareIndex(View):
         if request.user.is_authenticated and self.course.enable_student_change_course_shift:
             possibility_to_change_deadline, course_shift = allow_to_change_deadline(self.course.id, request.user)
 
+        course_shifts_update_deadlines_url = ''
+        if settings.FEATURES.get('ENABLE_COURSE_SHIFTS'):
+            course_shifts_update_deadlines_url = reverse('update-deadlines-course-shift',
+                                                         kwargs={'course_id': unicode(self.course.id)})
+
         courseware_context = {
             'csrf': csrf(self.request)['csrf_token'],
             'course': self.course,
@@ -392,8 +397,7 @@ class CoursewareIndex(View):
             'sequence_title': None,
             'disable_accordion': COURSE_OUTLINE_PAGE_FLAG.is_enabled(self.course.id),
             'possibility_to_change_deadline': possibility_to_change_deadline,
-            'course_shifts_update_deadlines_url': reverse('update-deadlines-course-shift',
-                                                          kwargs={'course_id': unicode(self.course.id)})
+            'course_shifts_update_deadlines_url': course_shifts_update_deadlines_url
         }
         courseware_context.update(
             get_experiment_user_metadata_context(

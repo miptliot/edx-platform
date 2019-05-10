@@ -3,6 +3,7 @@ Views for the course home page.
 """
 
 from django.urls import reverse
+from django.conf import settings
 from django.template.context_processors import csrf
 from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
@@ -180,6 +181,11 @@ class CourseHomeFragmentView(EdxFragmentView):
         if request.user.is_authenticated and course.enable_student_change_course_shift:
             possibility_to_change_deadline, course_shift = allow_to_change_deadline(course_key, request.user)
 
+        course_shifts_update_deadlines_url = ''
+        if settings.FEATURES.get('ENABLE_COURSE_SHIFTS'):
+            course_shifts_update_deadlines_url = reverse('update-deadlines-course-shift',
+                                                         kwargs={'course_id': unicode(course_key)})
+
         # Render the course home fragment
         context = {
             'request': request,
@@ -205,8 +211,7 @@ class CourseHomeFragmentView(EdxFragmentView):
             'upgrade_price': upgrade_price,
             'upgrade_url': upgrade_url,
             'possibility_to_change_deadline': possibility_to_change_deadline,
-            'course_shifts_update_deadlines_url': reverse('update-deadlines-course-shift',
-                                                          kwargs={'course_id': unicode(course_key)})
+            'course_shifts_update_deadlines_url': course_shifts_update_deadlines_url
         }
         html = render_to_string('course_experience/course-home-fragment.html', context)
         return Fragment(html)
