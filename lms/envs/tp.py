@@ -15,13 +15,26 @@ if RAVEN_CONFIG:
         print 'could not enable Raven!'
 # ===============
 
+ENV_SYSLOG_USE_TCP = str(os.getenv('SYSLOG_USE_TCP', False)) == 'True'
+ENV_SYSLOG_HOST = os.getenv('SYSLOG_HOST', None)
+ENV_SYSLOG_PORT = int(os.getenv('SYSLOG_PORT', 0))
+ENV_SYSLOG_SOCKET_TIMEOUT = float(os.getenv('SYSLOG_SOCKET_TIMEOUT', 0))
+
+log_settings = {
+    'syslog_use_tcp': ENV_TOKENS.get('SYSLOG_USE_TCP', ENV_SYSLOG_USE_TCP),
+    'syslog_host': ENV_TOKENS.get('SYSLOG_HOST', ENV_SYSLOG_HOST),
+    'syslog_port': int(ENV_TOKENS.get('SYSLOG_PORT', ENV_SYSLOG_PORT)),
+    'syslog_socket_timeout': float(ENV_TOKENS.get('SYSLOG_SOCKET_TIMEOUT', ENV_SYSLOG_SOCKET_TIMEOUT))
+}
+
 if is_docker():
     get_patched_logger_config(
         LOGGING,
         log_dir="/tmp",  # FIXME
         service_variant=SERVICE_VARIANT,
         use_raven=bool(RAVEN_CONFIG),
-        use_stsos=True
+        use_stsos=True,
+        log_settings=log_settings
     )
 
 SSO_TP_URL = ENV_TOKENS.get('SSO_TP_URL')
