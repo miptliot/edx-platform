@@ -1,6 +1,7 @@
+import socket
 import sys
 import logging
-from logging.handlers import SysLogHandler
+from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT
 
 
 class FilterTracking(logging.Filter):
@@ -24,9 +25,16 @@ class FilterTracking(logging.Filter):
 
 
 def get_patched_logger_config(logger_config, log_dir=None,
-                              syslog_address=('127.0.0.1', 514, ),
                               service_variant="",
-                              use_raven=False, use_stsos=False):
+                              use_raven=False, use_stsos=False, log_settings=None):
+
+    if not log_settings:
+        log_settings = {}
+    syslog_use_tcp = log_settings.get('syslog_use_tcp')
+    syslog_host = log_settings.get('syslog_host')
+    syslog_port = log_settings.get('syslog_port')
+    syslog_port = syslog_port if syslog_port > 0 else SYSLOG_UDP_PORT
+    syslog_socket_timeout = log_settings.get('syslog_socket_timeout')
 
     format_notime = ("{service_variant}|%(name)s|%(levelname)s"
                      "|%(process)d|%(filename)s:%(lineno)d"
@@ -80,9 +88,12 @@ def get_patched_logger_config(logger_config, log_dir=None,
         logger_config['handlers'].update({
             'stsos': {
                 'level': 'INFO',
-                'class': 'logging.handlers.SysLogHandler',
+                'class': 'openedx.core.lib.logsettings.ExtendedSysLogHandler',
+                'address': (syslog_host, syslog_port) if syslog_host else '/dev/log',
                 'facility': SysLogHandler.LOG_LOCAL2,
                 'formatter': 'raw',
+                'socktype': socket.SOCK_STREAM if syslog_use_tcp else socket.SOCK_DGRAM,
+                'socktimeout': syslog_socket_timeout,
                 'filters': ['stsos'],
             }
         })
@@ -96,9 +107,11 @@ def get_patched_logger_config(logger_config, log_dir=None,
 
     for item in ['tracking', 'local', 'stsos']:
         if item in logger_config['handlers']:
-            logger_config['handlers'][item].update({
-                'address': syslog_address,
-            })
+            if logger_config['handlers'][item].get('address') == '/dev/log' and syslog_host:
+                logger_config['handlers'][item].update({
+                    'address': (syslog_host, syslog_port),
+                })
+
             if log_dir:
                 handler_file = '{}_file'.format(item)
                 logger_config['handlers'].update({
