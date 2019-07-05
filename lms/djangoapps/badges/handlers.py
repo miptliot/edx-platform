@@ -14,5 +14,5 @@ def award_badge_on_enrollment(sender, event=None, user=None, **kwargs):  # pylin
     """
     Awards enrollment badge to the given user on new enrollments.
     """
-    if badges_enabled and event == EnrollStatusChange.enroll:
+    if badges_enabled() and event == EnrollStatusChange.enroll:
         award_enrollment_badge(user)
