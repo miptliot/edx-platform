@@ -1548,11 +1548,19 @@ class CourseEnrollment(models.Model):
 
         if course_shifts_enabled and course_shift:
             try:
-                course_shift_user = CourseShiftUser(
-                    course_key=course_key,
-                    course_shift=course_shift,
-                    user=user)
-                course_shift_user.save()
+                try:
+                    CourseShiftUser.objects.get(
+                        course_key=course_key,
+                        course_shift=course_shift,
+                        user=user
+                    )
+                except CourseShiftUser.DoesNotExist:
+                    with transaction.atomic():
+                        course_shift_user = CourseShiftUser(
+                            course_key=course_key,
+                            course_shift=course_shift,
+                            user=user)
+                        course_shift_user.save()
             except IntegrityError:
                 pass
 
