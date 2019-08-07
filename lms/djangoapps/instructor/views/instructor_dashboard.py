@@ -107,7 +107,8 @@ def instructor_dashboard_2(request, course_id):
         return _get_instructor_dashboard_2(request, course_id)
 
 
-def _get_instructor_dashboard_2(request, course_id):    try:
+def _get_instructor_dashboard_2(request, course_id):    
+    try:
         course_key = CourseKey.from_string(course_id)
     except InvalidKeyError:
         log.error(u"Unable to find course with course key %s while loading the Instructor Dashboard.", course_id)
