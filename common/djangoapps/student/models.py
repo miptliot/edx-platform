@@ -2912,3 +2912,38 @@ class LogoutViewConfiguration(ConfigurationModel):
     def __unicode__(self):
         """Unicode representation of the instance. """
         return u'Logout view configuration: {enabled}'.format(enabled=self.enabled)
+
+
+class EnrollmentTask(TimeStampedModel, models.Model):
+    NOT_STARTED = 'not_started'
+    STARTED = 'started'
+    FINISHED = 'finished'
+    ERROR = 'error'
+    STATUSES = (
+        (NOT_STARTED, 'Not Started'),
+        (STARTED, 'Started'),
+        (FINISHED, 'Finished'),
+        (ERROR, 'Error'),
+    )
+
+    task_uuid = models.CharField(max_length=255, db_index=True)
+    course_id = CourseKeyField(max_length=255, db_index=True)
+    request_data = models.TextField(blank=True)
+    result_data = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=255,
+        choices=STATUSES,
+        default=NOT_STARTED,
+    )
+
+    def set_started(self):
+        self.status = self.STARTED
+
+    def set_finished(self):
+        self.status = self.FINISHED
+
+    def set_error(self):
+        self.status = self.ERROR
+
+    def is_finished(self):
+        return self.status == self.FINISHED

@@ -4,6 +4,9 @@ consist primarily of authentication, request validation, and serialization.
 
 """
 import logging
+import json
+import uuid
+from django.db import transaction
 
 from course_modes.models import CourseMode
 from django.contrib.auth import get_user_model
@@ -40,14 +43,16 @@ from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 from six import text_type
 from student.auth import user_has_role
-from student.models import User
+from student.models import User, EnrollmentTask
 from student.roles import CourseStaffRole, GlobalStaff
 from util.disable_rate_limit import can_disable_rate_limit
+from celery.task import task
 
 log = logging.getLogger(__name__)
 REQUIRED_ATTRIBUTES = {
     "credit": ["credit:provider_id"],
 }
+tasks_log = logging.getLogger('edx.celery.task')
 
 
 class EnrollmentCrossDomainSessionAuth(SessionAuthenticationAllowInactiveUser, SessionAuthenticationCrossDomainCsrf):
@@ -635,6 +640,21 @@ class EnrollmentListView(APIView, ApiKeyPermissionMixIn):
                 }
             )
 
+        factory = EnrollFactory(has_api_key_permissions=has_api_key_permissions, embargo_enabled=True)
+        return factory.process(request, course_id, username, mode, course_shift_id)
+
+
+class EnrollFactory(object):
+    embargo_enabled = None
+    has_api_key_permissions = None
+    allow_update_email_opt_in = None
+
+    def __init__(self, has_api_key_permissions, embargo_enabled=True, allow_update_email_opt_in=True):
+        self.embargo_enabled = embargo_enabled
+        self.has_api_key_permissions = has_api_key_permissions
+        self.allow_update_email_opt_in = allow_update_email_opt_in
+
+    def process(self, request, course_id, username, mode, course_shift_id):
         try:
             # Lookup the user, instead of using request.user, since request.user may not match the username POSTed.
             user = User.objects.get(username=username)
@@ -646,10 +666,11 @@ class EnrollmentListView(APIView, ApiKeyPermissionMixIn):
                 }
             )
 
-        embargo_response = embargo_api.get_embargo_response(request, course_id, user)
+        if self.embargo_enabled:
+            embargo_response = embargo_api.get_embargo_response(request, course_id, user)
 
-        if embargo_response:
-            return embargo_response
+            if embargo_response:
+                return embargo_response
 
         try:
             is_active = request.data.get('is_active')
@@ -663,7 +684,7 @@ class EnrollmentListView(APIView, ApiKeyPermissionMixIn):
                 )
 
             explicit_linked_enterprise = request.data.get('linked_enterprise_customer')
-            if explicit_linked_enterprise and has_api_key_permissions and enterprise_enabled():
+            if explicit_linked_enterprise and self.has_api_key_permissions and enterprise_enabled():
                 enterprise_api_client = EnterpriseApiServiceClient()
                 consent_client = ConsentApiServiceClient()
                 try:
@@ -693,7 +714,7 @@ class EnrollmentListView(APIView, ApiKeyPermissionMixIn):
                 missing_attrs = set(REQUIRED_ATTRIBUTES.get(mode, [])) - set(actual_attrs)
                 audit_with_order = mode == 'audit' and 'order:order_number' in actual_attrs
             # Remove audit_with_order when no longer needed - implemented for REV-141
-            if has_api_key_permissions and (mode_changed or active_changed or audit_with_order):
+            if self.has_api_key_permissions and (mode_changed or active_changed or audit_with_order):
                 if mode_changed and active_changed and not is_active:
                     # if the requester wanted to deactivate but specified the wrong mode, fail
                     # the request (on the assumption that the requester had outdated information
@@ -718,7 +739,7 @@ class EnrollmentListView(APIView, ApiKeyPermissionMixIn):
                     is_active=is_active,
                     enrollment_attributes=enrollment_attributes,
                     # If we are updating enrollment by authorized api caller, we should allow expired modes
-                    include_expired=has_api_key_permissions
+                    include_expired=self.has_api_key_permissions
                 )
             else:
                 # Will reactivate inactive enrollments.
@@ -732,7 +753,7 @@ class EnrollmentListView(APIView, ApiKeyPermissionMixIn):
                 )
 
             email_opt_in = request.data.get('email_opt_in', None)
-            if email_opt_in is not None:
+            if email_opt_in is not None and self.allow_update_email_opt_in:
                 org = course_id.org
                 update_email_opt_in(request.user, org, email_opt_in)
 
@@ -771,7 +792,7 @@ class EnrollmentListView(APIView, ApiKeyPermissionMixIn):
             )
         finally:
             # Assumes that the ecommerce service uses an API key to authenticate.
-            if has_api_key_permissions:
+            if self.has_api_key_permissions:
                 current_enrollment = api.get_enrollment(username, unicode(course_id))
                 audit_log(
                     'enrollment_change_requested',
@@ -782,3 +803,134 @@ class EnrollmentListView(APIView, ApiKeyPermissionMixIn):
                     actual_activation=current_enrollment['is_active'] if current_enrollment else None,
                     user_id=user.id
                 )
+
+
+@can_disable_rate_limit
+class BatchEnrollmentView(APIView, ApiKeyPermissionMixIn):
+    authentication_classes = (JwtAuthentication, OAuth2AuthenticationAllowInactiveUser,
+                              EnrollmentCrossDomainSessionAuth,)
+    permission_classes = ApiKeyHeaderPermissionIsAuthenticated,
+    throttle_classes = EnrollmentUserThrottle,
+
+    def get(self, request, course_id):
+        course_id = CourseKey.from_string(course_id)
+
+        has_api_key_permissions = self.has_api_key_permissions(request)
+        if not has_api_key_permissions:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        task_uuid = request.GET.get('task_id')
+        if not task_uuid:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"message": "Missing task_id param"}
+            )
+
+        try:
+            task_obj = EnrollmentTask.objects.get(task_uuid=task_uuid, course_id=course_id)
+        except EnrollmentTask.DoesNotExist:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={"message": "Task not found"}
+            )
+
+        result = {"task": task_obj.status, "result": None}
+        if task_obj.is_finished() and task_obj.result_data:
+            result["result"] = json.loads(task_obj.result_data)
+
+        return Response(
+            status=status.HTTP_200_OK,
+            data=result
+        )
+
+    def post(self, request, course_id):
+        course_id = CourseKey.from_string(course_id)
+        has_api_key_permissions = self.has_api_key_permissions(request)
+        if not has_api_key_permissions:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if not isinstance(request.data, list):
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"message": "Invalid request: data should be presented as list"}
+            )
+
+        for item in request.data:
+            if 'user' not in item:
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={"message": "Invalid request: missing 'user' key in row: " + json.dumps(item)}
+                )
+
+        tasks = EnrollmentTask.objects.filter(
+            course_id=course_id,
+            status__in=[EnrollmentTask.NOT_STARTED, EnrollmentTask.STARTED])
+        if len(tasks) > 0:
+            return Response(
+                status=status.HTTP_403_FORBIDDEN,
+                data={"message": "Task for course already exists"}
+            )
+        else:
+            task_uuid = str(uuid.uuid4())
+            task_obj = EnrollmentTask(
+                task_uuid=task_uuid,
+                course_id=course_id,
+                request_data=json.dumps(request.data),
+            )
+            task_obj.save()
+            transaction.on_commit(lambda: batch_enrollment.delay(task_obj.id))
+            return Response(
+                status=status.HTTP_200_OK,
+                data={"task_id": task_uuid}
+            )
+
+
+class FakeRequest(object):
+    data = None
+
+    def __init__(self, data):
+        self.data = data
+
+
+@task(bind=True)
+def batch_enrollment(self, task_id):
+    tasks_log.info(u"Task for batch enrollment was started: task_id=%d" % task_id)
+
+    try:
+        task_obj = EnrollmentTask.objects.get(id=task_id)
+    except EnrollmentTask.DoesNotExist:
+        tasks_log.info(u"Task for batch enrollment [task_id=%d]: can't find Task in DB" % task_id)
+        return
+
+    with transaction.atomic():
+        task_obj.set_started()
+        task_obj.save()
+
+    factory = EnrollFactory(
+        has_api_key_permissions=True,
+        embargo_enabled=False,
+        allow_update_email_opt_in=False)
+
+    result = []
+    request_data = json.loads(task_obj.request_data)
+
+    for item_data in request_data:
+        username = item_data.get('user')
+        mode = item_data.get('mode')
+        course_shift_id = item_data.get('course_shift_id')
+
+        tasks_log.info(u"Task for batch enrollment [task_id=%d]: start process user %s" % (task_id, username))
+
+        with transaction.atomic():
+            resp = factory.process(FakeRequest(item_data), task_obj.course_id, username, mode, course_shift_id)
+            if 'course_details' in resp.data:
+                resp.data.pop('course_details', None)
+            result.append({'status_code': resp.status_code, 'data': resp.data})
+            task_obj.result_data = json.dumps(result)
+            task_obj.save()
+
+    with transaction.atomic():
+        task_obj.set_finished()
+        task_obj.save()
+
+    tasks_log.info(u"Task for batch enrollment was finished: task_id=%d" % task_id)
