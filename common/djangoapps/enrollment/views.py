@@ -834,7 +834,7 @@ class BatchEnrollmentView(APIView, ApiKeyPermissionMixIn):
                 data={"message": "Task not found"}
             )
 
-        result = {"task": task_obj.status, "result": None}
+        result = {"status": task_obj.status, "result": None}
         if task_obj.is_finished() and task_obj.result_data:
             result["result"] = json.loads(task_obj.result_data)
 
