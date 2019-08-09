@@ -795,6 +795,8 @@ def _create_or_rerun_course(request):
         fields = {'start': start}
         if display_name is not None:
             fields['display_name'] = display_name
+        fields['enable_course_shifts'] = request.json.get('enable_course_shifts', False)
+        fields['enable_student_change_course_shift'] = request.json.get('enable_student_change_course_shift', False)
 
         # Set a unique wiki_slug for newly created courses. To maintain active wiki_slugs for
         # existing xml courses this cannot be changed in CourseDescriptor.

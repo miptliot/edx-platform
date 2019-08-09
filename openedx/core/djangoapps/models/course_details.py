@@ -282,6 +282,15 @@ class CourseDetails(object):
             descriptor.self_paced = jsondict['self_paced']
             dirty = True
 
+        if 'enable_course_shifts' in jsondict and jsondict['enable_course_shifts'] != descriptor.enable_course_shifts:
+            descriptor.enable_course_shifts = jsondict['enable_course_shifts']
+            dirty = True
+
+        if 'enable_student_change_course_shift' in jsondict \
+                and jsondict['enable_student_change_course_shift'] != descriptor.enable_student_change_course_shift:
+            descriptor.enable_student_change_course_shift = jsondict['enable_student_change_course_shift']
+            dirty = True
+
         if dirty:
             module_store.update_item(descriptor, user.id)
 
@@ -293,7 +302,9 @@ class CourseDetails(object):
             if attribute in jsondict:
                 cls.update_about_item(descriptor, attribute, jsondict[attribute], user.id)
 
-        cls.update_about_video(descriptor, jsondict['intro_video'], user.id)
+        intro_video = jsondict.get('intro_video')
+        if intro_video:
+            cls.update_about_video(descriptor, intro_video, user.id)
 
         # Could just return jsondict w/o doing any db reads, but I put
         # the reads in as a means to confirm it persisted correctly
