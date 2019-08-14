@@ -5,7 +5,7 @@ from django.utils.translation import ugettext as _
 from django.utils.translation import pgettext
 from openedx.core.djangolib.markup import HTML, Text
 %>
-% if user.is_staff:
+% if user.is_staff or section_data['access']['org_admin']:
 <fieldset class="batch-enrollment membership-section">
     <legend id="heading-batch-enrollment" class="hd hd-3">${_("Batch Enrollment")}</legend>
     <label>

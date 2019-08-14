@@ -50,7 +50,8 @@ from openedx.core.lib.xblock_utils import wrap_xblock
 from shoppingcart.models import Coupon, CourseRegCodeItem, PaidCourseRegistration
 from student.auth import check_special_permissions
 from student.models import CourseEnrollment
-from student.roles import CourseFinanceAdminRole, CourseSalesAdminRole, CourseStaffRole, CourseInstructorRole
+from student.roles import CourseFinanceAdminRole, CourseSalesAdminRole, CourseStaffRole, CourseInstructorRole,\
+    OrgInstructorRole
 from util.json_request import JsonResponse
 from xmodule.html_module import HtmlDescriptor
 from xmodule.modulestore.django import modulestore
@@ -107,7 +108,7 @@ def instructor_dashboard_2(request, course_id):
         return _get_instructor_dashboard_2(request, course_id)
 
 
-def _get_instructor_dashboard_2(request, course_id):    
+def _get_instructor_dashboard_2(request, course_id):
     try:
         course_key = CourseKey.from_string(course_id)
     except InvalidKeyError:
@@ -118,6 +119,7 @@ def _get_instructor_dashboard_2(request, course_id):
 
     access = {
         'admin': request.user.is_staff,
+        'org_admin': OrgInstructorRole(course_key.org).has_user(request.user),
         'instructor': bool(has_access(request.user, 'instructor', course)),
         'finance_admin': CourseFinanceAdminRole(course_key).has_user(request.user),
         'sales_admin': CourseSalesAdminRole(course_key).has_user(request.user),
