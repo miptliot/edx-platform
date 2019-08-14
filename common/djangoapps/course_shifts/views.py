@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -26,7 +27,7 @@ def get_course_shifts(request, course):
     })
 
 
-@login_required
+@csrf_exempt
 @require_POST
 @check_course_exists(check_staff_permission=True)
 @transaction.atomic
