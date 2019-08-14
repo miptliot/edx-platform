@@ -115,7 +115,7 @@ from student.models import (
     unique_id_for_user,
     is_email_retired
 )
-from student.roles import CourseFinanceAdminRole, CourseSalesAdminRole, OrgStaffRole
+from student.roles import CourseFinanceAdminRole, CourseSalesAdminRole
 from submissions import api as sub_api  # installed from the edx-submissions repository
 from util.file import (
     FileValidationException,
@@ -211,7 +211,7 @@ def require_post_params(*args, **kwargs):
     return decorator
 
 
-def require_level(level, allow_org_staff=False):
+def require_level(level):
     """
     Decorator with argument that requires an access level of the requesting
     user. If the requirement is not satisfied, returns an
@@ -230,12 +230,9 @@ def require_level(level, allow_org_staff=False):
     def decorator(func):  # pylint: disable=missing-docstring
         def wrapped(*args, **kwargs):  # pylint: disable=missing-docstring
             request = args[0]
-            course_key = CourseKey.from_string(kwargs['course_id'])
-            course = get_course_by_id(course_key)
+            course = get_course_by_id(CourseKey.from_string(kwargs['course_id']))
 
             if has_access(request.user, level, course):
-                return func(*args, **kwargs)
-            elif allow_org_staff and OrgStaffRole(course_key.org).has_user(request.user):
                 return func(*args, **kwargs)
             elif check_special_permissions(request.user):
                 return func(*args, **kwargs)
@@ -776,7 +773,7 @@ def students_update_enrollment(request, course_id):
 @require_POST
 @ensure_csrf_cookie
 @cache_control(no_cache=True, no_store=True, must_revalidate=True)
-@require_level('instructor', allow_org_staff=True)
+@require_level('instructor')
 @common_exceptions_400
 @require_post_params(
     identifiers="stringified list of emails and/or usernames",
@@ -860,7 +857,7 @@ def bulk_beta_modify_access(request, course_id):
 @require_POST
 @ensure_csrf_cookie
 @cache_control(no_cache=True, no_store=True, must_revalidate=True)
-@require_level('instructor', allow_org_staff=True)
+@require_level('instructor')
 @require_post_params(
     unique_student_identifier="email or username of user to change access",
     rolename="'instructor', 'staff', 'beta', or 'ccx_coach'",
@@ -941,7 +938,7 @@ def modify_access(request, course_id):
 @require_POST
 @ensure_csrf_cookie
 @cache_control(no_cache=True, no_store=True, must_revalidate=True)
-@require_level('instructor', allow_org_staff=True)
+@require_level('instructor')
 @require_post_params(rolename="'instructor', 'staff', or 'beta'")
 def list_course_role_members(request, course_id):
     """
@@ -2559,7 +2556,7 @@ def problem_grade_report(request, course_id):
 @require_POST
 @ensure_csrf_cookie
 @cache_control(no_cache=True, no_store=True, must_revalidate=True)
-@require_level('staff', allow_org_staff=True)
+@require_level('staff')
 @require_post_params('rolename')
 def list_forum_members(request, course_id):
     """
@@ -2574,7 +2571,6 @@ def list_forum_members(request, course_id):
     """
     course_id = CourseKey.from_string(course_id)
     course = get_course_by_id(course_id)
-    org_staff = OrgStaffRole(course_id.org).has_user(request.user)
     has_instructor_access = has_access(request.user, 'instructor', course)
     has_forum_admin = has_forum_access(
         request.user, course_id, FORUM_ROLE_ADMINISTRATOR
@@ -2583,13 +2579,13 @@ def list_forum_members(request, course_id):
     rolename = request.POST.get('rolename')
 
     # default roles require either (staff & forum admin) or (instructor)
-    if not (has_forum_admin or has_instructor_access or org_staff):
+    if not (has_forum_admin or has_instructor_access):
         return HttpResponseBadRequest(
             "Operation requires staff & forum admin or instructor access"
         )
 
     # EXCEPT FORUM_ROLE_ADMINISTRATOR requires (instructor)
-    if rolename == FORUM_ROLE_ADMINISTRATOR and not (has_instructor_access or org_staff):
+    if rolename == FORUM_ROLE_ADMINISTRATOR and not has_instructor_access:
         return HttpResponseBadRequest("Operation requires instructor access.")
 
     # filter out unsupported for roles
