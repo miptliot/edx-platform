@@ -8,6 +8,7 @@ if SSO_ENABLED:
     SSO_TP_URL = ENV_TOKENS.get('SSO_TP_URL', 'http://sso.local.se:8081')
     SSO_API_URL = '%s/api-edx/' % SSO_TP_URL
     SSO_API_TOKEN = ENV_TOKENS.get('SSO_API_TOKEN', '123456')
+    SSO_PUSH_CHANGES = ENV_TOKENS.get('SSO_PUSH_CHANGES', False)
 
     SOCIAL_AUTH_EXCLUDE_URL_PATTERN = r'^/admin'
     SOCIAL_AUTH_LOGOUT_URL = '%s/logout/' % SSO_TP_URL
