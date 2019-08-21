@@ -182,7 +182,11 @@ SSO_TP_URL = os.getenv('SSO_TP_URL', locals().get('SSO_TP_URL'))
 if SSO_TP_URL:
     SSO_TP_URL = SSO_TP_URL.rstrip('/')
 SSO_API_URL = '%s/api-edx/' % SSO_TP_URL
-SSO_PUSH_CHANGES = str(os.getenv('SSO_PUSH_CHANGES', locals().get('SSO_PUSH_CHANGES', False))) == 'True'
+
+# for the branch hawthorn_saas_docker must be True by default
+SSO_PUSH_CHANGES_DEFAULT = True
+SSO_PUSH_CHANGES = str(os.getenv('SSO_PUSH_CHANGES',
+                                 locals().get('SSO_PUSH_CHANGES', SSO_PUSH_CHANGES_DEFAULT))) == 'True'
 SOCIAL_AUTH_LOGOUT_URL = '%s/logout/' % SSO_TP_URL
 
 STATIC_ROOT_BASE = os.getenv('STATIC_ROOT_BASE', locals().get('STATIC_ROOT_BASE', '/edx/var/edxapp/staticfiles'))

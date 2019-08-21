@@ -26,7 +26,9 @@ SSO_TP_URL = ENV_TOKENS.get('SSO_TP_URL', 'http://sso.local.se:8081').rstrip('/'
 
 SSO_API_URL = '%s/api-edx/' % SSO_TP_URL
 SSO_API_TOKEN = AUTH_TOKENS.get('SSO_API_TOKEN')
-SSO_PUSH_CHANGES = ENV_TOKENS.get('SSO_PUSH_CHANGES', False)
+
+# for the branch hawthorn_saas_docker must be True by default
+SSO_PUSH_CHANGES = ENV_TOKENS.get('SSO_PUSH_CHANGES', True)
 
 SOCIAL_AUTH_EXCLUDE_URL_PATTERN = r'^/admin'
 SOCIAL_AUTH_LOGOUT_URL = '%s/logout/' % SSO_TP_URL
