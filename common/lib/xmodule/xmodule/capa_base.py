@@ -235,9 +235,16 @@ class CapaMixin(ScorableXBlockMixin, CapaFields):
     def __init__(self, *args, **kwargs):
         super(CapaMixin, self).__init__(*args, **kwargs)
 
+        can_change_due = True
+        seq_parent = self.get_parent()
+        while seq_parent and seq_parent.category != 'sequential':
+            seq_parent = seq_parent.get_parent()
+        if seq_parent and seq_parent.has_overridden_due_field():
+            can_change_due = False
+
         due_date = self.due
 
-        if due_date and self.service_declaration("usage_info"):
+        if can_change_due and due_date and self.service_declaration("usage_info"):
             try:
                 usage_info_service = self.runtime.service(self, "usage_info")
                 if usage_info_service:
@@ -446,6 +453,7 @@ class CapaMixin(ScorableXBlockMixin, CapaFields):
             'attempts_used': self.attempts,
             'content': self.get_problem_html(encapsulate=False),
             'graded': self.graded,
+            'close_date': self.close_date
         })
 
     def submit_button_name(self):

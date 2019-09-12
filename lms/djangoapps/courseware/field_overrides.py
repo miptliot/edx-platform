@@ -213,6 +213,9 @@ class OverrideFieldData(FieldData):
     def get(self, block, name):
         value = self.get_override(block, name)
         if value is not NOTSET:
+            if not hasattr(block, '_overridden_fields'):
+                block._overridden_fields = set()
+            block._overridden_fields.add(name)
             return value
         return self.fallback.get(block, name)
 

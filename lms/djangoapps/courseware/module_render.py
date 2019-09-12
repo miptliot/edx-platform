@@ -859,7 +859,7 @@ def get_module_for_descriptor_internal(user, descriptor, student_data, course_id
                 descriptor.updated_course_shifts_dates = True
                 if start_value_is_set(descriptor) and hasattr(descriptor, 'start') and descriptor.start:
                     descriptor.start = usage_info_service.course_shift_date(descriptor.start)
-                if hasattr(descriptor, 'due') and descriptor.due:
+                if hasattr(descriptor, 'due') and descriptor.due and not descriptor.has_overridden_due_field():
                     descriptor.due = usage_info_service.course_shift_date(descriptor.due)
         except NoSuchServiceError:
             pass

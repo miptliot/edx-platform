@@ -698,6 +698,11 @@ class SequenceDescriptor(SequenceFields, ProctoringFields, MakoModuleDescriptor,
     }
     js_module_name = "SequenceDescriptor"
 
+    def has_overridden_due_field(self):
+        if getattr(self, 'due'):
+            return True if hasattr(self, '_overridden_fields') and 'due' in self._overridden_fields else False
+        return False
+
     @classmethod
     def definition_from_xml(cls, xml_object, system):
         children = []
