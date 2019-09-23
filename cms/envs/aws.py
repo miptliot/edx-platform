@@ -639,4 +639,7 @@ plugin_settings.add_plugins(__name__, plugin_constants.ProjectType.CMS, plugin_c
 
 ########################## Derive Any Derived Settings  #######################
 
+# API Key for inbound requests from Notifier service
+EDX_API_KEY = AUTH_TOKENS.get("EDX_API_KEY", '123456')
+
 derive_settings(__name__)
