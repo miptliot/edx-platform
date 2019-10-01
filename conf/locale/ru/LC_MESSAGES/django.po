@@ -2632,7 +2632,7 @@ msgstr "Отправить"
 
 #: common/lib/xmodule/xmodule/capa_base.py
 msgid "Submitting"
-msgstr ""
+msgstr "Отправляется"
 
 #: common/lib/xmodule/xmodule/capa_base.py
 msgid "Warning: The problem has been reset to its initial state!"
@@ -2677,6 +2677,7 @@ msgstr "Подсказка ({hint_num} из {hints_count}): "
 msgid ""
 "Your answers were previously saved. Click '{button_name}' to grade them."
 msgstr ""
+"Ваши ответы были ранее сохранены. Нажмите '{button_name}' для отправки на проверку."
 
 #: common/lib/xmodule/xmodule/capa_base.py
 #, python-brace-format
@@ -2707,11 +2708,11 @@ msgstr[3] "Частично верно ({progress} баллов)"
 
 #: common/lib/xmodule/xmodule/capa_base.py
 msgid "Partially Correct"
-msgstr ""
+msgstr "Частично верно"
 
 #: common/lib/xmodule/xmodule/capa_base.py
 msgid "Answer submitted."
-msgstr ""
+msgstr "Ответ отправлен"
 
 #. Translators: 'closed' means the problem's due date has passed. You may no
 #. longer attempt to solve the problem.
@@ -2721,7 +2722,7 @@ msgstr "Срок сдачи задания прошёл."
 
 #: common/lib/xmodule/xmodule/capa_base.py
 msgid "Problem must be reset before it can be submitted again."
-msgstr ""
+msgstr "Необходимо сбросить перед повтороной отправокй"
 
 #: common/lib/xmodule/xmodule/capa_base.py
 #, python-brace-format
@@ -2785,11 +2786,11 @@ msgstr ""
 #. longer attempt to solve the problem.
 #: common/lib/xmodule/xmodule/capa_base.py
 msgid "You cannot select Reset for a problem that is closed."
-msgstr ""
+msgstr "Нельзя сбросить для закрытого задания"
 
 #: common/lib/xmodule/xmodule/capa_base.py
 msgid "You must submit an answer before you can select Reset."
-msgstr ""
+msgstr "Вы должны отправить ответ до сброса."
 
 #. Translators: 'rescoring' refers to the act of re-submitting a student's
 #. solution so it can get a new score.
@@ -2820,11 +2821,11 @@ msgstr ""
 
 #: common/lib/xmodule/xmodule/capa_module.py
 msgid "Answer ID"
-msgstr ""
+msgstr "Ответ ID"
 
 #: common/lib/xmodule/xmodule/capa_module.py
 msgid "Question"
-msgstr ""
+msgstr "Вопрос"
 
 #: common/lib/xmodule/xmodule/conditional_module.py
 msgid "Conditional"
@@ -13799,10 +13800,10 @@ msgstr "Вы просматриваете курс под именем {i_start}
 #: lms/templates/problem.html
 msgid "You have used {num_used} of {num_total} attempt"
 msgid_plural "You have used {num_used} of {num_total} attempts"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
-msgstr[3] ""
+msgstr[0] "Попытки. Использовано {num_used} из {num_total}"
+msgstr[1] "Попытки. Использовано {num_used} из {num_total}"
+msgstr[2] "Попытки. Использовано {num_used} из {num_total}"
+msgstr[3] "Попытки. Использовано {num_used} из {num_total}"
 
 #: lms/templates/problem.html
 msgid ""
@@ -26245,3 +26246,6 @@ msgstr "Переместить в когорту:"
 
 msgid "Loading..."
 msgstr "Загрузка..."
+
+msgid "Answers are displayed within the problem"
+msgstr "В задании отмечен правильный ответ"
