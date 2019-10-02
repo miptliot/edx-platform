@@ -17,6 +17,7 @@ course_sections = blocks.get('children')
 %>
 <main role="main" class="course-outline" id="main" tabindex="-1">
     % if course_sections is not None:
+        % if False:
         <button class="btn btn-primary"
                 id="expand-collapse-outline-all-button"
                 aria-expanded="false"
@@ -24,6 +25,7 @@ course_sections = blocks.get('children')
                 >
           <span class="expand-collapse-outline-all-extra-padding" id="expand-collapse-outline-all-span">${_("Expand All")}</span>
         </button>
+        % endif
         <ol class="block-tree accordion"
             id="course-outline-block-tree"
             aria-labelledby="expand-collapse-outline-all-button">
