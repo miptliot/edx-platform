@@ -2676,8 +2676,7 @@ msgstr "Подсказка ({hint_num} из {hints_count}): "
 #, python-brace-format
 msgid ""
 "Your answers were previously saved. Click '{button_name}' to grade them."
-msgstr ""
-"Ваши ответы были ранее сохранены. Нажмите '{button_name}' для отправки на проверку."
+msgstr "Ваши ответы были ранее сохранены. Нажмите '{button_name}' для отправки на проверку."
 
 #: common/lib/xmodule/xmodule/capa_base.py
 #, python-brace-format
