@@ -320,6 +320,8 @@ FEATURES = {
 
     # Set this to true to make API docs available at /api-docs/.
     'ENABLE_API_DOCS': False,
+
+    'ALLOW_HIDING_DISCUSSION_TAB': True,
 }
 
 ENABLE_JASMINE = False
