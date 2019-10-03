@@ -3,6 +3,12 @@ from tp import *
 import os
 
 
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', 'edxuploads')
+AWS_S3_CALLING_FORMAT = os.getenv('AWS_S3_CALLING_FORMAT', 'boto.s3.connection.OrdinaryCallingFormat')
+AWS_S3_CUSTOM_DOMAIN = os.getenv('AWS_S3_CUSTOM_DOMAIN', locals().get('AWS_S3_CUSTOM_DOMAIN'))
+
 ## Env
 BUGS_EMAIL = os.getenv('BUGS_EMAIL', locals().get('BUGS_EMAIL'))
 BULK_EMAIL_DEFAULT_FROM_EMAIL = os.getenv('BULK_EMAIL_DEFAULT_FROM_EMAIL', locals().get('BULK_EMAIL_DEFAULT_FROM_EMAIL'))
@@ -299,6 +305,19 @@ GRADES_DOWNLOAD = {
     },
     "STORAGE_TYPE": os.getenv('GRADES_DOWNLOAD_STORAGE_TYPE', '')
 }
+
+if GRADES_DOWNLOAD.get('STORAGE_CLASS') == 'storages.backends.s3boto.S3BotoStorage':
+    GRADES_DOWNLOAD["STORAGE_KWARGS"] = {
+        "calling_format": AWS_S3_CALLING_FORMAT,
+        "location": "grades",
+        "acl": "private",
+        "custom_domain": AWS_S3_CUSTOM_DOMAIN,
+        "bucket": AWS_STORAGE_BUCKET_NAME,
+        "storage_type": 's3',
+    }
+    GRADES_DOWNLOAD["BUCKET"] = AWS_STORAGE_BUCKET_NAME
+    GRADES_DOWNLOAD["CUSTOM_DOMAIN"] = AWS_S3_CUSTOM_DOMAIN
+    GRADES_DOWNLOAD["STORAGE_TYPE"] = 's3'
 
 MODULESTORE = {
     "default": {
