@@ -57,37 +57,41 @@ class WeightedAssignmentFormatGrader(CourseGrader):
         self.starting_index = starting_index
         self.hide_average = hide_average
 
-    def grade(self, grade_sheet, generate_random_scores=False, unpublished_graded_verticals=dict()):
-        def total_with_drops(breakdown, drop_count):
-            """
-            Calculates total score for a section while dropping lowest scores
-            """
-            # Create an array of tuples with (index, mark), sorted by mark['percent'] descending
-            sorted_breakdown = sorted(enumerate(breakdown), key=lambda x: (-x[1].get('percent', 0.0)) * (x[1].get('weight', 1.0) or 1.0))
-            # A list of the indices of the dropped scores
-            dropped_indices = []
-            dropped_breakdown = []
-            if drop_count > 0:
-                dropped_indices = [x[0] for x in sorted_breakdown[-drop_count:]]
-                dropped_breakdown = [x[1] for x in sorted_breakdown[-drop_count:]]
+    def total_with_drops(self, breakdown):
+        """
+        Calculates total score for a section while dropping lowest scores
+        """
+        # Create an array of tuples with (index, mark), sorted by mark['percent'] descending
+        drop_count = self.drop_count
+        sorted_breakdown = sorted(enumerate(breakdown), key=lambda x: (-x[1].get('percent', 0.0)) * (x[1].get('weight', 1.0) or 1.0))
+        # A list of the indices of the dropped scores
+        dropped_indices = []
+        dropped_breakdown = []
+        if drop_count > 0:
+            dropped_indices = [x[0] for x in sorted_breakdown[-drop_count:]]
+            dropped_breakdown = [x[1] for x in sorted_breakdown[-drop_count:]]
 
-            # Calculate normalized_weight for breakdown
-            normalized_weight = 0
-            if breakdown:
-                normalized_weight = sum((x.get('weight', 1) or 1.0) for x in breakdown)
-            if dropped_breakdown:
-                normalized_weight -= sum((x.get('weight', 1) or 1.0) for x in dropped_breakdown)
+        # Calculate normalized_weight for breakdown
+        normalized_weight = 0
+        if breakdown:
+            normalized_weight = sum((x.get('weight', 1) or 1.0) for x in breakdown)
+        if dropped_breakdown:
+            normalized_weight -= sum((x.get('weight', 1) or 1.0) for x in dropped_breakdown)
 
-            aggregate_score = 0
-            if len(breakdown) > len(dropped_breakdown):
-                aggregate_score = sum(m['percent'] * (m.get('weight', 1) or 1.0) for m in breakdown if m not in dropped_breakdown)
-            if len(breakdown) - drop_count > 0 and normalized_weight > 0:
-                aggregate_score /= normalized_weight
-            elif normalized_weight == 0:
-                aggregate_score = 1.0
-            else:
-                assert "Drop count cannot be greater than assignments count."
-            return aggregate_score, dropped_indices
+        aggregate_score = 0
+        if len(breakdown) > len(dropped_breakdown):
+            aggregate_score = sum(m['percent'] * (m.get('weight', 1) or 1.0) for m in breakdown if m not in dropped_breakdown)
+        if len(breakdown) - drop_count > 0 and normalized_weight > 0:
+            aggregate_score /= normalized_weight
+        elif normalized_weight == 0:
+            aggregate_score = 1.0
+        else:
+            assert "Drop count cannot be greater than assignments count."
+        return aggregate_score, dropped_indices
+
+    def grade(self, grade_sheet, generate_random_scores=False, unpublished_graded_verticals=None):
+        if unpublished_graded_verticals is None:
+            unpublished_graded_verticals = {}
 
         scores = grade_sheet.get(self.type, {}).values()
         unpublished_weights = unpublished_graded_verticals.get(self.type, [])
@@ -139,7 +143,7 @@ class WeightedAssignmentFormatGrader(CourseGrader):
                 'weight': weight,
             })
 
-        total_percent, dropped_indices = total_with_drops(breakdown, self.drop_count)
+        total_percent, dropped_indices = self.total_with_drops(breakdown)
 
         for dropped_index in dropped_indices:
             breakdown[dropped_index]['mark'] = {
