@@ -4,6 +4,7 @@ Django storage backends for Open edX.
 from django.contrib.staticfiles.storage import StaticFilesStorage
 from django.core.files.storage import get_storage_class
 from django.utils.lru_cache import lru_cache
+from django.utils.encoding import filepath_to_uri
 from pipeline.storage import NonPackagingMixin, PipelineCachedStorage
 from require.storage import OptimizedFilesMixin
 from storages.backends.s3boto import S3BotoStorage
@@ -76,6 +77,14 @@ class S3ReportStorage(S3BotoStorage):  # pylint: disable=abstract-method
         if custom_domain:
             self.custom_domain = custom_domain
         super(S3ReportStorage, self).__init__(acl=acl, bucket=bucket, **settings)
+
+    def url(self, name, headers=None, response_headers=None, expire=None):
+        # Preserve the trailing slash after normalizing the path.
+        name = self._normalize_name(self._clean_name(name))
+        if self.custom_domain and self.calling_format == 'boto.s3.connection.OrdinaryCallingFormat':
+            return "%s//%s/%s/%s" % (self.url_protocol, self.custom_domain,
+                                     self.bucket.name, filepath_to_uri(name))
+        return super(S3ReportStorage, self).url(name, headers, response_headers, expire)
 
 
 @lru_cache()
