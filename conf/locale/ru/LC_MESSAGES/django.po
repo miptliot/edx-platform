@@ -26235,7 +26235,7 @@ msgid "Are you sure you want to reset deadlines?"
 msgstr "Вы уверены что хотите сбросить дедлайны?"
 
 msgid "Update Deadlines"
-msgstr "Сбросить дедлайны"
+msgstr "Сменить сессию"
 
 msgid "Enter user's email or username:"
 msgstr "Введите имя пользователя или его email:"

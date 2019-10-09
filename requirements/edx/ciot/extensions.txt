@@ -3,4 +3,4 @@
 -e git+https://github.com/miptliot/open_edx_api_extension_cms.git@9e457bdb2a0ef4151593c6392f2c9847af7232a0#egg=open_edx_api_extension_cms
 -e git+https://github.com/miptliot/open_edx_api_extension.git@hawthorn_dev#egg=open_edx_api_extension
 
--e git+https://github.com/miptliot/video_evms.git@b0690d6ce03c7c2fdc777e68d02be752c0b8638d#egg=video_evms
+-e git+https://github.com/miptliot/video_evms.git@6adfceab555769a497401122a3ec49ed782e2632#egg=video_evms

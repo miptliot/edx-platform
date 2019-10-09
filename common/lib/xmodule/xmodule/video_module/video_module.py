@@ -83,7 +83,6 @@ from .video_xfields import VideoFields
 # of this particular import silliness. It's just that I haven't made one before,
 # and I was worried about trying it with my deadline constraints.
 try:
-    # import edxval.api as edxval_api
     import video_evms.api as edxval_api
 except ImportError:
     edxval_api = None
@@ -724,7 +723,7 @@ class VideoDescriptor(VideoDescriptorEvmsMixin, VideoFields, VideoTranscriptsMix
                 # transcripts into their openedX instances.
 
                 exported_metadata = edxval_api.export_to_xml(
-                    video_id=edx_video_id,
+                    edx_video_id,
                     resource_fs=resource_fs,
                     static_dir=EXPORT_IMPORT_STATIC_DIR,
                     course_id=unicode(self.runtime.course_id.for_branch(None))
@@ -988,7 +987,7 @@ class VideoDescriptor(VideoDescriptorEvmsMixin, VideoFields, VideoTranscriptsMix
             external_transcripts[language_code].append(transcript)
 
         if edxval_api:
-            edx_video_id = edxval_api.import_from_xml(
+            edx_video_id_ret = edxval_api.import_from_xml(
                 video_asset_elem,
                 edx_video_id,
                 resource_fs,
@@ -996,6 +995,8 @@ class VideoDescriptor(VideoDescriptorEvmsMixin, VideoFields, VideoTranscriptsMix
                 external_transcripts,
                 course_id=course_id
             )
+            if edx_video_id_ret:
+                edx_video_id = edx_video_id_ret
         return edx_video_id
 
     def index_dictionary(self):
