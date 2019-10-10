@@ -26217,7 +26217,7 @@ msgid "User must be enrolled to the course"
 msgstr "Пользователь должен быть записан на курс"
 
 msgid "Your deadlines were successfully updated"
-msgstr "Дедлайны были усмешно обновлены"
+msgstr "Сессия была успешно изменена"
 
 msgid "There is no available shifts"
 msgstr "Нет доступных для записи когорт"
@@ -26232,7 +26232,7 @@ msgid "Course Shifts"
 msgstr "Когорты"
 
 msgid "Are you sure you want to reset deadlines?"
-msgstr "Вы уверены что хотите сбросить дедлайны?"
+msgstr "Вы уверены что хотите сменить сессию?"
 
 msgid "Update Deadlines"
 msgstr "Сменить сессию"
