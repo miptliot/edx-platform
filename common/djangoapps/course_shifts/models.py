@@ -58,9 +58,7 @@ class CourseShift(models.Model):
             return course_shift.to_dict(convert_dates_to_str=False) if course_shift else None
 
     @classmethod
-    def get_course_shift_by_current_date(cls, course_key, user=None):
-        dt_now = timezone.now()
-
+    def get_users_course_shift(cls, course_key, user):
         if user is not None and user.is_authenticated:
             try:
                 course_shift_user = CourseShiftUser.objects.get(course_key=course_key, user=user)
@@ -68,6 +66,16 @@ class CourseShift(models.Model):
                     return course_shift_user.course_shift
             except CourseShiftUser.DoesNotExist:
                 pass
+        return None
+
+    @classmethod
+    def get_course_shift_by_current_date(cls, course_key, user=None):
+        dt_now = timezone.now()
+
+        if user:
+            users_course_shift = cls.get_users_course_shift(course_key, user)
+            if users_course_shift:
+                return users_course_shift
 
         course_shift = CourseShift.objects.filter(
             course_key=course_key,

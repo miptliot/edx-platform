@@ -3,7 +3,8 @@ Declares CourseUsageInfo class to be used by the transform method in
 Transformers.
 """
 from lms.djangoapps.courseware.access import _has_access_to_course
-from course_shifts.models import CourseShift, course_shift_deadline
+from course_shifts.models import CourseShift, CourseShiftUser, course_shift_deadline
+from student.models import AnonymousUserId
 from django.conf import settings
 
 
@@ -61,3 +62,39 @@ class CourseUsageInfo(object):
                 )
         return block_start_date
 
+    def course_shifts_enabled(self):
+        if settings.FEATURES.get("ENABLE_COURSE_SHIFTS", False):
+            try:
+                CourseShift.objects.get(
+                    course_key=self.course_key,
+                    enabled=True,
+                    studio_version=True)
+                return True
+            except CourseShift.DoesNotExist:
+                pass
+        return False
+
+    def get_anonymous_users_from_same_course_shift(self):
+        users_course_shift = CourseShift.get_users_course_shift(self.course_key, self.user)
+        if users_course_shift:
+            users = AnonymousUserId.objects.filter(course_id=self.course_key)\
+                .exclude(user_id=self.user.id)\
+                .select_related('user')
+            user_ids_dct = {u.user.id: u.anonymous_user_id for u in users}
+            user_ids_lst = [u.user.id for u in users]
+            result = []
+            if len(user_ids_lst) > 0:
+                cs_users = CourseShiftUser.objects.filter(
+                    course_key=self.course_key,
+                    course_shift=users_course_shift,
+                    user_id__in=user_ids_lst
+                )
+                for cs_user in cs_users:
+                    if cs_user.user_id in user_ids_lst:
+                        cs_anonymous_user_id = user_ids_dct[cs_user.user_id]
+                        if cs_anonymous_user_id not in result:
+                            result.append(cs_anonymous_user_id)
+                return result
+            else:
+                return []
+        return None
