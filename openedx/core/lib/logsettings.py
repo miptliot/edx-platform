@@ -7,8 +7,6 @@ import sys
 import warnings
 from logging.handlers import SysLogHandler, SYSLOG_UDP_PORT
 
-from django.conf import settings
-
 LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
 
 
@@ -65,7 +63,9 @@ class ExtendedSysLogHandler(logging.handlers.SysLogHandler):
 def get_logger_config(log_dir,
                       logging_env="no_env",
                       local_loglevel='INFO',
-                      service_variant=""):
+                      service_variant="",
+                      log_settings=None,
+                      raven_dsn=None):
 
     """
 
@@ -88,20 +88,13 @@ def get_logger_config(log_dir,
                                              logging_env=logging_env,
                                              hostname=hostname)
 
-    syslog_use_tcp = False
-    syslog_host = ''
-    syslog_port = 0
-    syslog_socket_timeout = 0
-
-    if hasattr(settings, 'SYSLOG_USE_TCP'):
-        syslog_use_tcp = getattr(settings, 'SYSLOG_USE_TCP')
-    if hasattr(settings, 'SYSLOG_HOST'):
-        syslog_host = getattr(settings, 'SYSLOG_HOST')
-    if hasattr(settings, 'SYSLOG_PORT'):
-        syslog_port = int(getattr(settings, 'SYSLOG_PORT'))
+    if not log_settings:
+        log_settings = {}
+    syslog_use_tcp = log_settings.get('syslog_use_tcp')
+    syslog_host = log_settings.get('syslog_host')
+    syslog_port = log_settings.get('syslog_port')
     syslog_port = syslog_port if syslog_port > 0 else SYSLOG_UDP_PORT
-    if hasattr(settings, 'SYSLOG_SOCKET_TIMEOUT'):
-        syslog_socket_timeout = float(getattr(settings, 'SYSLOG_SOCKET_TIMEOUT'))
+    syslog_socket_timeout = log_settings.get('syslog_socket_timeout')
 
     logger_config = {
         'version': 1,
@@ -174,7 +167,7 @@ def get_logger_config(log_dir,
         }
     }
 
-    if hasattr(settings, 'RAVEN_CONFIG') and hasattr(settings.RAVEN_CONFIG, 'dsn'):
+    if raven_dsn:
         logger_config['handlers'].update({
             'sentry': {
                 'level': 'ERROR',
