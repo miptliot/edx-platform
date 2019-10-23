@@ -326,10 +326,25 @@ local_loglevel = ENV_TOKENS.get('LOCAL_LOGLEVEL', 'INFO')
 LOG_DIR = ENV_TOKENS['LOG_DIR']
 DATA_DIR = path(ENV_TOKENS.get('DATA_DIR', DATA_DIR))
 
+ENV_RAVEN_DSN = os.getenv('DSN', None)
+ENV_SYSLOG_USE_TCP = str(os.getenv('SYSLOG_USE_TCP', False)) == 'True'
+ENV_SYSLOG_HOST = os.getenv('SYSLOG_HOST', None)
+ENV_SYSLOG_PORT = int(os.getenv('SYSLOG_PORT', 0))
+ENV_SYSLOG_SOCKET_TIMEOUT = float(os.getenv('SYSLOG_SOCKET_TIMEOUT', 0))
+
+log_settings = {
+    'syslog_use_tcp': ENV_TOKENS.get('SYSLOG_USE_TCP', ENV_SYSLOG_USE_TCP),
+    'syslog_host': ENV_TOKENS.get('SYSLOG_HOST', ENV_SYSLOG_HOST),
+    'syslog_port': int(ENV_TOKENS.get('SYSLOG_PORT', ENV_SYSLOG_PORT)),
+    'syslog_socket_timeout': float(ENV_TOKENS.get('SYSLOG_SOCKET_TIMEOUT', ENV_SYSLOG_SOCKET_TIMEOUT))
+}
+
 LOGGING = get_logger_config(LOG_DIR,
                             logging_env=ENV_TOKENS['LOGGING_ENV'],
                             local_loglevel=local_loglevel,
-                            service_variant=SERVICE_VARIANT)
+                            service_variant=SERVICE_VARIANT,
+                            log_settings=log_settings,
+                            raven_dsn=ENV_RAVEN_DSN)
 
 COURSE_LISTINGS = ENV_TOKENS.get('COURSE_LISTINGS', {})
 COMMENTS_SERVICE_URL = ENV_TOKENS.get("COMMENTS_SERVICE_URL", '')
