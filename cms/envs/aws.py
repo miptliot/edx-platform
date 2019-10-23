@@ -256,9 +256,24 @@ for app in ENV_TOKENS.get('ADDL_INSTALLED_APPS', []):
 
 WIKI_ENABLED = ENV_TOKENS.get('WIKI_ENABLED', WIKI_ENABLED)
 
+ENV_RAVEN_DSN = os.getenv('DSN', None)
+ENV_SYSLOG_USE_TCP = str(os.getenv('SYSLOG_USE_TCP', False)) == 'True'
+ENV_SYSLOG_HOST = os.getenv('SYSLOG_HOST', None)
+ENV_SYSLOG_PORT = int(os.getenv('SYSLOG_PORT', 0))
+ENV_SYSLOG_SOCKET_TIMEOUT = float(os.getenv('SYSLOG_SOCKET_TIMEOUT', 0))
+
+log_settings = {
+    'syslog_use_tcp': ENV_TOKENS.get('SYSLOG_USE_TCP', ENV_SYSLOG_USE_TCP),
+    'syslog_host': ENV_TOKENS.get('SYSLOG_HOST', ENV_SYSLOG_HOST),
+    'syslog_port': int(ENV_TOKENS.get('SYSLOG_PORT', ENV_SYSLOG_PORT)),
+    'syslog_socket_timeout': float(ENV_TOKENS.get('SYSLOG_SOCKET_TIMEOUT', ENV_SYSLOG_SOCKET_TIMEOUT))
+}
+
 LOGGING = get_logger_config(LOG_DIR,
                             logging_env=ENV_TOKENS['LOGGING_ENV'],
-                            service_variant=SERVICE_VARIANT)
+                            service_variant=SERVICE_VARIANT,
+                            log_settings=log_settings,
+                            raven_dsn=ENV_RAVEN_DSN)
 
 #theming start:
 PLATFORM_NAME = ENV_TOKENS.get('PLATFORM_NAME', PLATFORM_NAME)
