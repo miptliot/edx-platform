@@ -92,4 +92,10 @@ urlpatterns = [
     url(r'^generate_bulk_certificate_exceptions', api.generate_bulk_certificate_exceptions,
         name='generate_bulk_certificate_exceptions'),
     url(r'^certificate_invalidation_view/$', api.certificate_invalidation_view, name='certificate_invalidation_view'),
+    url(r'^certificate_black_list/add_user', api.certificate_black_list_add_user,
+        name='certificate_black_list_add_user'),
+    url(r'^certificate_black_list/remove_user', api.certificate_black_list_remove_user,
+        name='certificate_black_list_remove_user'),
+    url(r'^certificate_black_list/data', api.certificate_black_list_data, name='certificate_black_list_data'),
+    url(r'^generated_certificates_data', api.generated_certificates_data, name='generated_certificates_data'),
 ]

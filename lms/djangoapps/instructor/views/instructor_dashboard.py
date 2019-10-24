@@ -416,6 +416,22 @@ def _section_certificates(course):
                 'list_instructor_tasks',
                 kwargs={'course_id': course.id}
             ),
+            'certificate_black_list_add_user': reverse(
+                'certificate_black_list_add_user',
+                kwargs={'course_id': course.id}
+            ),
+            'certificate_black_list_remove_user': reverse(
+                'certificate_black_list_remove_user',
+                kwargs={'course_id': course.id}
+            ),
+            'certificate_black_list_data': reverse(
+                'certificate_black_list_data',
+                kwargs={'course_id': course.id}
+            ),
+            'generated_certificates_data': reverse(
+                'generated_certificates_data',
+                kwargs={'course_id': course.id}
+            )
         }
     }
 

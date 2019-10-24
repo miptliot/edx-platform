@@ -6559,7 +6559,7 @@ msgstr ""
 
 #: lms/djangoapps/courseware/views/views.py
 msgid "We're working on it..."
-msgstr ""
+msgstr "Работаем над сертификатом..."
 
 #: lms/djangoapps/courseware/views/views.py
 msgid ""
@@ -6569,7 +6569,7 @@ msgstr ""
 
 #: lms/djangoapps/courseware/views/views.py
 msgid "Your certificate has been invalidated"
-msgstr ""
+msgstr "Ваш сертификат был признан недействительным"
 
 #: lms/djangoapps/courseware/views/views.py
 msgid "Please contact your course team if you have any questions."
@@ -6577,7 +6577,7 @@ msgstr ""
 
 #: lms/djangoapps/courseware/views/views.py
 msgid "Congratulations, you qualified for a certificate!"
-msgstr ""
+msgstr "Поздравляем, вы набрали достаточное количество баллов для получения сертификата!"
 
 #: lms/djangoapps/courseware/views/views.py
 msgid "You've earned a certificate for this course."
@@ -6585,7 +6585,7 @@ msgstr ""
 
 #: lms/djangoapps/courseware/views/views.py
 msgid "Certificate unavailable"
-msgstr ""
+msgstr "Сертификат недоступен"
 
 #: lms/djangoapps/courseware/views/views.py
 #, python-brace-format
@@ -6596,7 +6596,7 @@ msgstr ""
 
 #: lms/djangoapps/courseware/views/views.py
 msgid "Your certificate is available"
-msgstr ""
+msgstr "Сертификат готов"
 
 #: lms/djangoapps/courseware/views/views.py
 #, python-brace-format
@@ -18292,11 +18292,11 @@ msgstr "Создать повторно для слушателей, не пол
 
 #: lms/templates/instructor/instructor_dashboard_2/certificates.html
 msgid "Regenerate for learners with audit passing state. ({count})"
-msgstr ""
+msgstr "Перегенерировать для слушателей, кто прошёл аудит. ({count})"
 
 #: lms/templates/instructor/instructor_dashboard_2/certificates.html
 msgid "Regenerate for learners with audit not passing state. ({count})"
-msgstr ""
+msgstr "Перегенерировать для слушателей, кто не прошёл аудит. ({count})"
 
 #: lms/templates/instructor/instructor_dashboard_2/certificates.html
 msgid "Regenerate for learners in an error state. ({count})"
@@ -26245,3 +26245,29 @@ msgstr "Переместить в когорту:"
 
 msgid "Loading..."
 msgstr "Загрузка..."
+
+msgid "Regenerate Certificate"
+msgstr "Обновить сертификат"
+
+msgid "User already in the black list"
+msgstr "Пользователь уже в чёрном списке"
+
+msgid "Individual Exceptions"
+msgstr "Исключения"
+
+msgid "Enter the username or email address of each learner that you want to add to blacklist."
+msgstr ""
+"Введите имя пользователя или email учащегося, чтобы добавить его в чёрный список"
+" (пользователям из чёрного списка сертификат не генерируется)."
+
+msgid "Student email or username"
+msgstr "Имя пользователя или email учащегося"
+
+msgid "Username or email"
+msgstr "Имя пользователя или email"
+
+msgid "Add to Black List"
+msgstr "Добавить в чёрный список"
+
+msgid "Generated Certificates"
+msgstr "Выданные сертификаты"

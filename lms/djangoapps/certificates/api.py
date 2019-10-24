@@ -22,7 +22,8 @@ from lms.djangoapps.certificates.models import (
     CertificateTemplateAsset,
     ExampleCertificateSet,
     GeneratedCertificate,
-    certificate_status_for_student
+    certificate_status_for_student,
+    get_certificate
 )
 from lms.djangoapps.certificates.queue import XQueueCertInterface
 from eventtracking import tracker
@@ -239,6 +240,8 @@ def certificate_downloadable_status(student, course_key):
     # If the certificate status is an error user should view that status is "generating".
     # On the back-end, need to monitor those errors and re-submit the task.
 
+    generated_certificate = get_certificate(student, course_key)
+
     response_data = {
         'is_downloadable': False,
         'is_generating': True if current_status['status'] in [CertificateStatuses.generating,
@@ -246,6 +249,7 @@ def certificate_downloadable_status(student, course_key):
         'is_unverified': True if current_status['status'] == CertificateStatuses.unverified else False,
         'download_url': None,
         'uuid': None,
+        'grade': generated_certificate.grade if generated_certificate else None
     }
     may_view_certificate = CourseOverview.get_from_id(course_key).may_certify()
 

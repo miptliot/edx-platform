@@ -123,6 +123,15 @@ class CertificateSocialNetworks(object):
     twitter = 'Twitter'
 
 
+class CertificateBlacklist(models.Model):
+    class Meta(object):
+        app_label = "certificates"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    course_id = CourseKeyField(max_length=255, blank=True, default=None)
+    created = AutoCreatedField(_('created'))
+
+
 class CertificateWhitelist(models.Model):
     """
     Tracks students who are whitelisted, all users
@@ -513,6 +522,14 @@ def certificate_status_for_student(student, course_id):
     except GeneratedCertificate.DoesNotExist:
         generated_certificate = None
     return certificate_status(generated_certificate)
+
+
+def get_certificate(student, course_id):
+    try:
+        generated_certificate = GeneratedCertificate.objects.get(user=student, course_id=course_id)
+    except GeneratedCertificate.DoesNotExist:
+        generated_certificate = None
+    return generated_certificate
 
 
 def certificate_status(generated_certificate):

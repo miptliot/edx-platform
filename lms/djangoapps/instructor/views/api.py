@@ -9,6 +9,7 @@ import csv
 import datetime
 import decimal
 import json
+import math
 import logging
 import random
 import re
@@ -48,7 +49,7 @@ import lms.djangoapps.instructor_task.api
 from bulk_email.models import BulkEmailFlag, CourseEmail, CourseEmailDelay
 from lms.djangoapps.certificates import api as certs_api
 from lms.djangoapps.certificates.models import (
-    CertificateInvalidation, CertificateStatuses, CertificateWhitelist, GeneratedCertificate,
+    CertificateInvalidation, CertificateStatuses, CertificateWhitelist, GeneratedCertificate, CertificateBlacklist
 )
 from courseware.access import has_access
 from courseware.courses import get_course_by_id, get_course_with_access
@@ -3264,6 +3265,139 @@ def generate_certificate_exceptions(request, course_id, generate_for=None):
     }
 
     return JsonResponse(response_payload)
+
+
+@transaction.non_atomic_requests
+@ensure_csrf_cookie
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+@require_global_staff
+@require_POST
+@common_exceptions_400
+def certificate_black_list_add_user(request, course_id):
+    course_key = CourseKey.from_string(course_id)
+    user_token = request.POST.get('user')
+    if not user_token:
+        return JsonResponse({
+            'success': False,
+            'message': _("User not found")
+        })
+    try:
+        user = get_student(user_token, course_key)
+    except ValueError as e:
+        return JsonResponse({
+            'success': False,
+            'message': e.message
+        })
+
+    try:
+        CertificateBlacklist.objects.get(user=user, course_id=course_key)
+        return JsonResponse({
+            'success': False,
+            'message': _('User already in the black list')
+        })
+    except CertificateBlacklist.DoesNotExist:
+        cert = CertificateBlacklist(
+            user=user,
+            course_id=course_key
+        )
+        cert.save()
+    return JsonResponse({
+        'success': True
+    })
+
+
+@transaction.non_atomic_requests
+@ensure_csrf_cookie
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+@require_global_staff
+@require_POST
+@common_exceptions_400
+def certificate_black_list_remove_user(request, course_id):
+    course_key = CourseKey.from_string(course_id)
+    user_id = request.POST.get('user_id')
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': _("User not found")
+        })
+    CertificateBlacklist.objects.filter(user=user, course_id=course_key).delete()
+    return JsonResponse({
+        'success': True
+    })
+
+
+@transaction.non_atomic_requests
+@ensure_csrf_cookie
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+@require_global_staff
+def certificate_black_list_data(request, course_id):
+    course_key = CourseKey.from_string(course_id)
+    data = CertificateBlacklist.objects.filter(course_id=course_key)
+    result = []
+    for v in data:
+        result.append({
+            "name": v.user.username,
+            "email": v.user.email,
+            "user_id": v.user.id,
+            "created": str(v.created.isoformat())
+        })
+    return JsonResponse({
+        "success": True,
+        "result": result
+    })
+
+
+@transaction.non_atomic_requests
+@ensure_csrf_cookie
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+@require_global_staff
+def generated_certificates_data(request, course_id):
+    course_key = CourseKey.from_string(course_id)
+    try:
+        page = int(request.GET.get('page', 1))
+    except ValueError:
+        page = 1
+    page = page - 1
+
+    items_per_page = 25
+    num_from = page * items_per_page
+    if num_from:
+        try:
+            num_from = int(num_from)
+        except ValueError:
+            pass
+    if not num_from:
+        num_from = 0
+    num_to = num_from + items_per_page
+
+    count = GeneratedCertificate.objects.filter(status=CertificateStatuses.downloadable,
+                                                course_id=course_key).count()
+    data = GeneratedCertificate.objects.filter(status=CertificateStatuses.downloadable,
+                                               course_id=course_key).order_by('user__email')[num_from:num_to]
+    pages_count = int(math.ceil(count / (items_per_page * 1.0)))
+
+    result = []
+    for v in data:
+        result.append({
+            "name": v.user.username,
+            "email": v.user.email,
+            "user_id": v.user.id,
+            "grade": "{0:.0f}%".format(float(v.grade)*100),
+            "mode": v.mode,
+            "created": str(v.created_date.isoformat()),
+            "url": reverse('certificates:html_view', kwargs={
+                "user_id": str(v.user.id),
+                "course_id": unicode(course_id)
+            })
+        })
+    return JsonResponse({
+        "success": True,
+        "pages_count": pages_count,
+        "current_page": page + 1,
+        "result": result
+    })
 
 
 @cache_control(no_cache=True, no_store=True, must_revalidate=True)

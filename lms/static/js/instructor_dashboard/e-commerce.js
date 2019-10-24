@@ -30,7 +30,9 @@
             this.$reports_request_response = this.$reports.find('.request-response');
             this.$reports_request_response_error = this.$reports.find('.request-response-error');
             this.report_downloads = new (ReportDownloads())(this.$section);
-            this.instructor_tasks = new (PendingInstructorTasks())(this.$section);
+            if ($(this.$section).length > 0) {
+                this.instructor_tasks = new (PendingInstructorTasks())(this.$section);
+            }
             this.$error_msg = this.$section.find('#error-msg');
             this.$list_sale_csv_btn.click(function() {
                 location.href = eCom.$list_sale_csv_btn.data('endpoint') + '/csv';

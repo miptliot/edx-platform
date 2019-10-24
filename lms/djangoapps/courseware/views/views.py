@@ -115,7 +115,7 @@ log = logging.getLogger("edx.courseware")
 REQUIREMENTS_DISPLAY_MODES = CourseMode.CREDIT_MODES + [CourseMode.VERIFIED]
 
 CertData = namedtuple(
-    "CertData", ["cert_status", "title", "msg", "download_url", "cert_web_view_url"]
+    "CertData", ["cert_status", "title", "msg", "download_url", "cert_web_view_url", "grade"]
 )
 
 AUDIT_PASSING_CERT_DATA = CertData(
@@ -123,7 +123,8 @@ AUDIT_PASSING_CERT_DATA = CertData(
     _('Your enrollment: Audit track'),
     _('You are enrolled in the audit track for this course. The audit track does not include a certificate.'),
     download_url=None,
-    cert_web_view_url=None
+    cert_web_view_url=None,
+    grade=None
 )
 
 HONOR_PASSING_CERT_DATA = CertData(
@@ -131,7 +132,8 @@ HONOR_PASSING_CERT_DATA = CertData(
     _('Your enrollment: Honor track'),
     _('You are enrolled in the honor track for this course. The honor track does not include a certificate.'),
     download_url=None,
-    cert_web_view_url=None
+    cert_web_view_url=None,
+    grade=None
 )
 
 GENERATING_CERT_DATA = CertData(
@@ -142,7 +144,8 @@ GENERATING_CERT_DATA = CertData(
         "to it will appear here and on your Dashboard when it is ready."
     ),
     download_url=None,
-    cert_web_view_url=None
+    cert_web_view_url=None,
+    grade=None
 )
 
 INVALID_CERT_DATA = CertData(
@@ -150,7 +153,8 @@ INVALID_CERT_DATA = CertData(
     _('Your certificate has been invalidated'),
     _('Please contact your course team if you have any questions.'),
     download_url=None,
-    cert_web_view_url=None
+    cert_web_view_url=None,
+    grade=None
 )
 
 REQUESTING_CERT_DATA = CertData(
@@ -158,7 +162,8 @@ REQUESTING_CERT_DATA = CertData(
     _('Congratulations, you qualified for a certificate!'),
     _("You've earned a certificate for this course."),
     download_url=None,
-    cert_web_view_url=None
+    cert_web_view_url=None,
+    grade=None
 )
 
 UNVERIFIED_CERT_DATA = CertData(
@@ -169,17 +174,19 @@ UNVERIFIED_CERT_DATA = CertData(
         'verified identity.'
     ).format(platform_name=configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME)),
     download_url=None,
-    cert_web_view_url=None
+    cert_web_view_url=None,
+    grade=None
 )
 
 
-def _downloadable_cert_data(download_url=None, cert_web_view_url=None):
+def _downloadable_cert_data(download_url=None, cert_web_view_url=None, grade=None):
     return CertData(
         CertificateStatuses.downloadable,
         _('Your certificate is available'),
         _("You've earned a certificate for this course."),
         download_url=download_url,
-        cert_web_view_url=cert_web_view_url
+        cert_web_view_url=cert_web_view_url,
+        grade=grade
     )
 
 
@@ -1014,12 +1021,14 @@ def _downloadable_certificate_message(course, cert_downloadable_status):
                 download_url=None,
                 cert_web_view_url=certs_api.get_certificate_url(
                     course_id=course.id, uuid=cert_downloadable_status['uuid']
-                )
+                ),
+                grade=cert_downloadable_status.get('grade')
             )
         elif not cert_downloadable_status['download_url']:
             return GENERATING_CERT_DATA
 
-    return _downloadable_cert_data(download_url=cert_downloadable_status['download_url'])
+    return _downloadable_cert_data(download_url=cert_downloadable_status['download_url'],
+                                   grade=cert_downloadable_status.get('grade'))
 
 
 def _missing_required_verification(student, enrollment_mode):
@@ -1398,7 +1407,9 @@ def generate_user_cert(request, course_id):
     )
 
     if certificate_status["is_downloadable"]:
-        return HttpResponseBadRequest(_("Certificate has already been created."))
+        certs_api.regenerate_user_certificates(student, course_key, course=course)
+        _track_successful_certificate_generation(student.id, course.id)
+        return HttpResponse()
     elif certificate_status["is_generating"]:
         return HttpResponseBadRequest(_("Certificate is being created."))
     else:

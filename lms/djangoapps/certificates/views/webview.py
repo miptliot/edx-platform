@@ -96,8 +96,21 @@ def _update_certificate_context(context, course, user_certificate, platform_name
     # Populate dynamic output values using the course/certificate data loaded above
     certificate_type = context.get('certificate_type')
 
+    try:
+        context['user_first_name'] = user_certificate.user.first_name
+        context['user_last_name'] = user_certificate.user.last_name
+    except User.DoesNotExist:
+        context['user_first_name'] = 'Ivan'
+        context['user_last_name'] = 'Ivanov'
+
+    context['user_full_name'] = context['user_first_name'] + ' ' + context['user_last_name']
+
+    context['grade'] = "{0:.0f}%".format(float(user_certificate.grade)*100)
+    context['course_title'] = course.display_name
+
     # Override the defaults with any mode-specific static values
     context['certificate_id_number'] = user_certificate.verify_uuid
+    context['cert_number'] = user_certificate.verify_uuid
     context['certificate_verify_url'] = "{prefix}{uuid}{suffix}".format(
         prefix=context.get('certificate_verify_url_prefix'),
         uuid=user_certificate.verify_uuid,
@@ -107,6 +120,11 @@ def _update_certificate_context(context, course, user_certificate, platform_name
     # Translators:  The format of the date includes the full name of the month
     date = display_date_for_certificate(course, user_certificate)
     context['certificate_date_issued'] = _('{month} {day}, {year}').format(
+        month=strftime_localized(date, "%B"),
+        day=date.day,
+        year=date.year
+    )
+    context['cert_date'] = _('{day} {month} {year}').format(
         month=strftime_localized(date, "%B"),
         day=date.day,
         year=date.year

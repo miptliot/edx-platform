@@ -355,7 +355,9 @@
             plantTimeout(0, function() {
                 return new SendEmail(eml.$section.find('.send-email'));
             });
-            this.instructor_tasks = new (PendingInstructorTasks())(this.$section);
+            if ($(this.$section).length > 0) {
+                this.instructor_tasks = new (PendingInstructorTasks())(this.$section);
+            }
         }
 
         email.prototype.onClickTitle = function() {
