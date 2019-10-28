@@ -598,7 +598,7 @@ class EnrollmentListView(APIView, ApiKeyPermissionMixIn):
         """
         # Get the User, Course ID, and Mode from the request.
 
-        username = request.data.get('user', request.user.username)
+        username = get_request_username(request.data, request.user.username)
         course_id = request.data.get('course_details', {}).get('course_id')
         course_shift_id = request.data.get('course_shift_id', None)
 
@@ -856,7 +856,7 @@ class BatchEnrollmentView(APIView, ApiKeyPermissionMixIn):
             )
 
         for item in request.data:
-            if 'user' not in item:
+            if 'user' not in item and 'user_id' not in item and 'email' not in item:
                 return Response(
                     status=status.HTTP_400_BAD_REQUEST,
                     data={"message": "Invalid request: missing 'user' key in row: " + json.dumps(item)}
@@ -892,6 +892,32 @@ class FakeRequest(object):
         self.data = data
 
 
+def get_request_username(data, default_username=None):
+    req_user = None
+    req_user_id = data.get('user_id')
+    req_user_email = data.get('email')
+
+    if req_user_id:
+        try:
+            req_user_id = int(req_user_id)
+        except ValueError:
+            req_user_id = None
+
+    if req_user_id:
+        try:
+            req_user = User.objects.get(pk=req_user_id)
+        except User.DoesNotExist:
+            pass
+
+    if req_user_email and not req_user:
+        try:
+            req_user = User.objects.get(email=req_user_email)
+        except User.DoesNotExist:
+            pass
+
+    return data.get('user', req_user.username if req_user else default_username)
+
+
 @task(bind=True)
 def batch_enrollment(self, task_id):
     tasks_log.info(u"Task for batch enrollment was started: task_id=%d" % task_id)
@@ -915,13 +941,12 @@ def batch_enrollment(self, task_id):
     request_data = json.loads(task_obj.request_data)
 
     for item_data in request_data:
-        username = item_data.get('user')
-        mode = item_data.get('mode')
-        course_shift_id = item_data.get('course_shift_id')
-
-        tasks_log.info(u"Task for batch enrollment [task_id=%d]: start process user %s" % (task_id, username))
-
         with transaction.atomic():
+            username = get_request_username(item_data)
+            mode = item_data.get('mode')
+            course_shift_id = item_data.get('course_shift_id')
+            tasks_log.info(u"Task for batch enrollment [task_id=%d]: start process user %s" % (task_id, username))
+
             resp = factory.process(FakeRequest(item_data), task_obj.course_id, username, mode, course_shift_id)
             if 'course_details' in resp.data:
                 resp.data.pop('course_details', None)
