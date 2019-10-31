@@ -2,6 +2,7 @@
 """
 Certificate HTML webview.
 """
+import binascii
 import logging
 import urllib
 from datetime import datetime
@@ -105,12 +106,18 @@ def _update_certificate_context(context, course, user_certificate, platform_name
 
     context['user_full_name'] = context['user_first_name'] + ' ' + context['user_last_name']
 
-    context['grade'] = "{0:.0f}%".format(float(user_certificate.grade)*100)
+    context['grade'] = "{0:.0f}".format(float(user_certificate.grade) * 100)
+    context['grade_percentage'] = "{0:.0f}%".format(float(user_certificate.grade) * 100)
     context['course_title'] = course.display_name
 
     # Override the defaults with any mode-specific static values
     context['certificate_id_number'] = user_certificate.verify_uuid
     context['cert_number'] = user_certificate.verify_uuid
+
+    cert_number_short = binascii.crc32(str(user_certificate.verify_uuid))
+    if cert_number_short < 0:
+        cert_number_short = (-1) * cert_number_short
+    context['cert_number_short'] = str(cert_number_short)
     context['certificate_verify_url'] = "{prefix}{uuid}{suffix}".format(
         prefix=context.get('certificate_verify_url_prefix'),
         uuid=user_certificate.verify_uuid,
@@ -124,9 +131,9 @@ def _update_certificate_context(context, course, user_certificate, platform_name
         day=date.day,
         year=date.year
     )
-    context['cert_date'] = _('{day} {month} {year}').format(
-        month=strftime_localized(date, "%B"),
-        day=date.day,
+    context['cert_date'] = '{day}.{month}.{year}'.format(
+        day=date.strftime('%d'),
+        month=date.strftime('%m'),
         year=date.year
     )
 
