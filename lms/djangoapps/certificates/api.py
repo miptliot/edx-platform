@@ -12,7 +12,6 @@ import urllib
 import binascii
 import os
 import tempfile
-import hashlib
 import subprocess
 
 from django.conf import settings
@@ -1202,9 +1201,8 @@ def create_pdf_for_certificate(cert):
     tmp_file = str(uuid4()) + '.pdf'
     tmp_pdf_path = os.path.join(tempfile.gettempdir(), tmp_file)
 
-    subprocess.call(settings.PDF_RENDER_BIN + ' -B 0 -L 0 -R 0 -T 0 ' + tmp_html_path + ' ' + tmp_pdf_path, shell=True)
+    subprocess.call(settings.PDF_RENDER_BIN + ' --encoding UTF-8 -B 0 -L 0 -R 0 -T 0 ' + tmp_html_path + ' ' + tmp_pdf_path, shell=True)
 
-    storage_file_hash = hashlib.md5(str(cert.course_id) + '/' + str(cert.user.id)).hexdigest()
     storage_class = settings.DEFAULT_FILE_STORAGE
     kwargs = {}
     if storage_class in ('storages.backends.s3boto.S3BotoStorage', 'openedx.core.storage.S3ReportStorage'):
@@ -1213,13 +1211,20 @@ def create_pdf_for_certificate(cert):
             'location': 'certificates',
             'custom_domain': settings.AWS_S3_CUSTOM_DOMAIN
         }
+
     storage = get_storage(storage_class, **kwargs)
+    storage_file_hash = str(uuid4())
     storage_certificate_file_path = str(cert.user.id) + '_' + storage_file_hash + '.pdf'
 
     if storage.exists(storage_certificate_file_path):
         storage.delete(storage_certificate_file_path)
 
     if os.path.isfile(tmp_pdf_path):
+        if cert.download_uuid:
+            old_certificate_file_path = str(cert.user.id) + '_' + str(cert.download_uuid) + '.pdf'
+            if storage.exists(old_certificate_file_path):
+                storage.delete(old_certificate_file_path)
+        
         with open(tmp_pdf_path, 'r') as pdf_file:
             storage.save(storage_certificate_file_path, pdf_file)
 
