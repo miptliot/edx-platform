@@ -13,6 +13,7 @@ import binascii
 import os
 import tempfile
 import subprocess
+import time
 
 from django.conf import settings
 from django.urls import reverse
@@ -1204,34 +1205,51 @@ def create_pdf_for_certificate(cert):
     tmp_pdf_path1 = os.path.join(tempfile.gettempdir(), tmp_file1)
     tmp_pdf_path2 = os.path.join(tempfile.gettempdir(), tmp_file2)
 
+    t1 = time.time()
+
     subprocess.call(
         settings.PDF_RENDER_BIN + ' --encoding UTF-8 -B 0 -L 0 -R 0 -T 0 ' + tmp_html_path + ' ' + tmp_pdf_path1,
         shell=True)
 
+    t2 = time.time()
+
     if not os.path.isfile(tmp_pdf_path1):
-        log.error("Can't create PDF file for user %d and course %s" % (cert.user.id, str(cert.course_id)))
+        log.error("Can't create tmp PDF certificate for user %d and course %s" % (cert.user.id, str(cert.course_id)))
         os.remove(tmp_html_path)
         return
+
+    log.info('Tmp PDF certificate was created [user %d, course %s, time: %s]'
+             % (cert.user.id, str(cert.course_id), str(t2 - t1)))
+
+    t3 = time.time()
 
     subprocess.call(
         'pdftk ' + tmp_pdf_path1 + ' cat 1 output ' + tmp_pdf_path2,
         shell=True)
 
+    t4 = time.time()
+
     if not os.path.isfile(tmp_pdf_path2):
-        log.error("Can't take first page from tmp PDF file for user %d and course %s"
+        log.error("Can't take first page from tmp PDF certificate for user %d and course %s"
                   % (cert.user.id, str(cert.course_id)))
         os.remove(tmp_pdf_path1)
         os.remove(tmp_html_path)
         return
 
+    log.info('Final PDF certificate was created [user %d, course %s, time: %s]'
+             % (cert.user.id, str(cert.course_id), str(t4 - t3)))
+
     storage_class = settings.DEFAULT_FILE_STORAGE
     kwargs = {}
     if storage_class in ('storages.backends.s3boto.S3BotoStorage', 'openedx.core.storage.S3ReportStorage'):
+        storage_class = 'openedx.core.storage.S3ReportStorage'
         kwargs = {
             'bucket': settings.AWS_STORAGE_BUCKET_NAME,
             'location': 'certificates',
             'custom_domain': settings.AWS_S3_CUSTOM_DOMAIN
         }
+
+    t5 = time.time()
 
     storage = get_storage(storage_class, **kwargs)
     storage_file_hash = str(uuid4()).replace('-', '')
@@ -1249,6 +1267,11 @@ def create_pdf_for_certificate(cert):
         storage.save(storage_certificate_file_path, pdf_file)
 
     url_to_save = storage.url(storage_certificate_file_path)
+
+    t6 = time.time()
+
+    log.info('Final PDF certificate was uploaded to storage [user %d, course %s, time: %s]'
+             % (cert.user.id, str(cert.course_id), str(t6 - t5)))
 
     cert.download_url = url_to_save
     cert.download_uuid = storage_file_hash

@@ -80,8 +80,8 @@ class S3ReportStorage(S3BotoStorage):  # pylint: disable=abstract-method
 
     def url(self, name, headers=None, response_headers=None, expire=None):
         # Preserve the trailing slash after normalizing the path.
-        name = self._normalize_name(self._clean_name(name))
         if self.custom_domain and self.calling_format == 'boto.s3.connection.OrdinaryCallingFormat':
+            name = self._normalize_name(self._clean_name(name))
             return "%s//%s/%s/%s" % (self.url_protocol, self.custom_domain,
                                      self.bucket.name, filepath_to_uri(name))
         return super(S3ReportStorage, self).url(name, headers, response_headers, expire)
