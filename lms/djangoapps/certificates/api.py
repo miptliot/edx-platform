@@ -1198,10 +1198,31 @@ def create_pdf_for_certificate(cert):
     tmp_html_file.write(resp.content)
     tmp_html_file.close()
 
-    tmp_file = str(uuid4()) + '.pdf'
-    tmp_pdf_path = os.path.join(tempfile.gettempdir(), tmp_file)
+    tmp_file1 = str(uuid4()) + '_1.pdf'
+    tmp_file2 = str(uuid4()) + '_2.pdf'
 
-    subprocess.call(settings.PDF_RENDER_BIN + ' --encoding UTF-8 -B 0 -L 0 -R 0 -T 0 ' + tmp_html_path + ' ' + tmp_pdf_path, shell=True)
+    tmp_pdf_path1 = os.path.join(tempfile.gettempdir(), tmp_file1)
+    tmp_pdf_path2 = os.path.join(tempfile.gettempdir(), tmp_file2)
+
+    subprocess.call(
+        settings.PDF_RENDER_BIN + ' --encoding UTF-8 -B 0 -L 0 -R 0 -T 0 ' + tmp_html_path + ' ' + tmp_pdf_path1,
+        shell=True)
+
+    if not os.path.isfile(tmp_pdf_path1):
+        log.error("Can't create PDF file for user %d and course %s" % (cert.user.id, str(cert.course_id)))
+        os.remove(tmp_html_path)
+        return
+
+    subprocess.call(
+        'pdftk ' + tmp_pdf_path1 + ' cat 1 output ' + tmp_pdf_path2,
+        shell=True)
+
+    if not os.path.isfile(tmp_pdf_path2):
+        log.error("Can't take first page from tmp PDF file for user %d and course %s"
+                  % (cert.user.id, str(cert.course_id)))
+        os.remove(tmp_pdf_path1)
+        os.remove(tmp_html_path)
+        return
 
     storage_class = settings.DEFAULT_FILE_STORAGE
     kwargs = {}
@@ -1213,28 +1234,28 @@ def create_pdf_for_certificate(cert):
         }
 
     storage = get_storage(storage_class, **kwargs)
-    storage_file_hash = str(uuid4())
+    storage_file_hash = str(uuid4()).replace('-', '')
     storage_certificate_file_path = str(cert.user.id) + '_' + storage_file_hash + '.pdf'
 
     if storage.exists(storage_certificate_file_path):
         storage.delete(storage_certificate_file_path)
 
-    if os.path.isfile(tmp_pdf_path):
-        if cert.download_uuid:
-            old_certificate_file_path = str(cert.user.id) + '_' + str(cert.download_uuid) + '.pdf'
-            if storage.exists(old_certificate_file_path):
-                storage.delete(old_certificate_file_path)
-        
-        with open(tmp_pdf_path, 'r') as pdf_file:
-            storage.save(storage_certificate_file_path, pdf_file)
+    if cert.download_uuid:
+        old_certificate_file_path = str(cert.user.id) + '_' + str(cert.download_uuid) + '.pdf'
+        if storage.exists(old_certificate_file_path):
+            storage.delete(old_certificate_file_path)
 
-        url_to_save = storage.url(storage_certificate_file_path)
+    with open(tmp_pdf_path2, 'r') as pdf_file:
+        storage.save(storage_certificate_file_path, pdf_file)
 
-        cert.download_url = url_to_save
-        cert.download_uuid = storage_file_hash
-        cert.save()
+    url_to_save = storage.url(storage_certificate_file_path)
 
-        os.remove(tmp_pdf_path)
+    cert.download_url = url_to_save
+    cert.download_uuid = storage_file_hash
+    cert.save()
+
+    os.remove(tmp_pdf_path2)
+    os.remove(tmp_pdf_path1)
     os.remove(tmp_html_path)
 
 
