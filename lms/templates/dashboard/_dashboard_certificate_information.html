@@ -87,6 +87,14 @@ else:
                   ${_("View {cert_name_short}").format(cert_name_short=cert_name_short,)}
                 </a>
               </li>
+              % if cert_status['download_url']:
+              <li class="action action-certificate">
+                <a class="btn" href="${cert_status['download_url']}"
+                   title="${_('This link will open/download a PDF document')}">
+                  ${_("Download {cert_name_short} (PDF)").format(cert_name_short=cert_name_short,)}
+                </a>
+              </li>
+              % endif
             % elif cert_status['status'] == 'downloadable' and enrollment.mode in CourseMode.NON_VERIFIED_MODES:
               <li class="action action-certificate">
                 <a class="btn" href="${cert_status['download_url']}"

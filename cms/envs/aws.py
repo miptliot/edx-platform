@@ -641,5 +641,6 @@ plugin_settings.add_plugins(__name__, plugin_constants.ProjectType.CMS, plugin_c
 
 # API Key for inbound requests from Notifier service
 EDX_API_KEY = AUTH_TOKENS.get("EDX_API_KEY", '123456')
+PDF_RENDER_BIN = ENV_TOKENS.get('PDF_RENDER_BIN', 'wkhtmltopdf')
 
 derive_settings(__name__)

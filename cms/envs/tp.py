@@ -108,3 +108,5 @@ CUSTOM_THIRD_PARTY_AUTH_STRATEGY = 'sso_edx_tp.strategy.ConfigurationModelStrate
 INSTALLED_APPS += (
     'sso_edx_tp',
 )
+
+PDF_RENDER_BIN = ENV_TOKENS.get('PDF_RENDER_BIN', 'wkhtmltopdf')

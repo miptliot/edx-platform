@@ -79,12 +79,13 @@ username = get_enterprise_learner_generic_name(request) or student.username
                                 <div class="msg-actions">
                                     %if certificate_data.cert_web_view_url:
                                     <a class="btn" href="${certificate_data.cert_web_view_url}" target="_blank" style="font-size: 16px;">${_("View Certificate")} <span class="sr">${_("Opens in a new browser window")}</span></a>
+                                    %if certificate_data.cert_status == CertificateStatuses.downloadable and certificate_data.download_url:
+                                    <a class="btn" href="${certificate_data.download_url}" target="_blank">${_("Download Your Certificate")} <span class="sr">${_("Opens in a new browser window")}</span></a>
+                                    %endif
                                     <% certificate_data_grade = float(certificate_data.grade) if certificate_data.grade else None %>
                                     %if grade_summary['percent'] != certificate_data_grade:
                                     <button class="btn generate_certs" data-endpoint="${post_url}" id="btn_generate_cert" style="font-size: 16px;">${_('Regenerate Certificate')}</button>
                                     %endif
-                                    %elif certificate_data.cert_status == CertificateStatuses.downloadable and certificate_data.download_url:
-                                    <a class="btn" href="${certificate_data.download_url}" target="_blank">${_("Download Your Certificate")} <span class="sr">${_("Opens in a new browser window")}</span></a>
                                     %elif certificate_data.cert_status == CertificateStatuses.requesting:
                                     <button class="btn generate_certs" data-endpoint="${post_url}" id="btn_generate_cert">${_('Request Certificate')}</button>
                                     %endif

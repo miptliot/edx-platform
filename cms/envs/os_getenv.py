@@ -375,3 +375,5 @@ XQUEUE_INTERFACE = {
     },
     'url': os.getenv('XQUEUE_INTERFACE__url', 'http://localhost:18040'),
 }
+
+PDF_RENDER_BIN = os.getenv('PDF_RENDER_BIN', locals().get('PDF_RENDER_BIN', 'wkhtmltopdf'))

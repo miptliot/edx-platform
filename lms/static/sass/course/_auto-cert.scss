@@ -18,14 +18,14 @@
 
     .has-actions {
       .msg-content {
-        width: flex-grid(7, 12);
+        width: flex-grid(6, 12);
       }
 
       .msg-actions {
         @extend %t-copy-base;
 
         display: inline-block;
-        width: flex-grid(5, 12);
+        width: flex-grid(6, 12);
 
         .btn {
           @extend %btn-primary-blue;

@@ -1018,7 +1018,7 @@ def _downloadable_certificate_message(course, cert_downloadable_status):
     if certs_api.has_html_certificates_enabled(course):
         if certs_api.get_active_web_certificate(course) is not None:
             return _downloadable_cert_data(
-                download_url=None,
+                download_url=cert_downloadable_status.get('download_url'),
                 cert_web_view_url=certs_api.get_certificate_url(
                     course_id=course.id, uuid=cert_downloadable_status['uuid']
                 ),
