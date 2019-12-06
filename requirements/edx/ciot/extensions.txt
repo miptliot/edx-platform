@@ -1,5 +1,5 @@
 # da83e8bd2f7a89f47c1c9143cc8bb5c966e64409
--e git+https://github.com/miptliot/tp-sso-edx-client.git@2316bf0e9cd109cbefe674c8518ca47ee7ac2fd9#egg=sso_edx_tp
+-e git+https://github.com/miptliot/tp-sso-edx-client.git@fb1a09cb721fbb1fcfe819104d5db2e0bd0cb558#egg=sso_edx_tp
 -e git+https://github.com/miptliot/open_edx_api_extension_cms.git@6fb525abcaddbe1093028201252a1b75150ddac7#egg=open_edx_api_extension_cms
 -e git+https://github.com/miptliot/open_edx_api_extension.git@hawthorn_dev#egg=open_edx_api_extension
 
