@@ -178,10 +178,26 @@ from six import string_types
               href_class = "add-to-cart"
             else:
               href_class = "register"
+
+            if rall_enabled:
+              if rall_can_enroll:
+                href_class = "register"
+              else:
+                href_class = "register disabled"
           %>
           <a href="${reg_href}" class="${href_class}">
+            % if rall_enabled:
+            ${_("Enroll through 20.35 University")}
+            % else:
             ${_("Enroll in {course_name}").format(course_name=course.display_number_with_default) | h}
+            % endif
           </a>
+          % if rall_error:
+          <div style="color:red; padding-top: 12px; padding-bottom: 12px;">${rall_error}</div>
+          % endif
+          % if display_link_for_payment:
+          <a href="${link_for_payment}" target="_blank" class="redirect-and-pay">${_("Pay for Course")}</a>
+          % endif
           <div id="register_error"></div>
         %endif
         </div>

@@ -111,6 +111,9 @@ class ChooseModeView(View):
         if not CourseMode.has_verified_mode(modes):
             return redirect(reverse('dashboard'))
 
+        if course.enable_integration_2035_univ:
+            return redirect(reverse('about_course', kwargs={'course_id': unicode(course_key)}))
+
         # If a user has already paid, redirect them to the dashboard.
         if is_active and (enrollment_mode in CourseMode.VERIFIED_MODES + [CourseMode.NO_ID_PROFESSIONAL_MODE]):
             # If the course has started redirect to course home instead

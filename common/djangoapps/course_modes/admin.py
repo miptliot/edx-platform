@@ -187,7 +187,8 @@ class CourseModeAdmin(admin.ModelAdmin):
         '_expiration_datetime',
         'verification_deadline',
         'sku',
-        'bulk_sku'
+        'bulk_sku',
+        'description'
     )
 
     search_fields = ('course__id',)

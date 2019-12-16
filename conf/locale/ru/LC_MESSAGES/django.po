@@ -26271,3 +26271,30 @@ msgstr "Добавить в чёрный список"
 
 msgid "Generated Certificates"
 msgstr "Выданные сертификаты"
+
+msgid "Enable integration with 20.35 University"
+msgstr "Включить интеграцию с Университетом 20.35"
+
+msgid "Description (can be used as External URL for payment)"
+msgstr "Описание (может быть использовано, чтобы задать URL для оплаты)"
+
+msgid "Pay for Course"
+msgstr "Оплатить обучение"
+
+msgid "Enroll through 20.35 University"
+msgstr "Записаться за счет Университета 20.35"
+
+msgid "Course available only for the 20.35 students"
+msgstr "Чтобы записаться за счёт Университета 20.35 вы должны быть авторизованы через него"
+
+msgid "Course available only for authorized users"
+msgstr "Курс доступен только для авторизованных ппользователей"
+
+msgid "You can't enroll through 20.35: Unknown server error"
+msgstr "Запись через Университет 20.35 недоступна: Неизвестная ошибка в процессе верификации пользователя"
+
+msgid "You can't enroll through 20.35:"
+msgstr "Запись через Университет 20.35 недоступна:"
+
+msgid "University 20.35 can't enroll student"
+msgstr "Университет 20.35 не может записать студента на курс"

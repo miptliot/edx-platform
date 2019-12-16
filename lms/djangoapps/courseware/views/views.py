@@ -10,6 +10,7 @@ from datetime import datetime
 import analytics
 import bleach
 from django.conf import settings
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser, User
 from django.core.exceptions import PermissionDenied
@@ -50,7 +51,8 @@ from courseware.courses import (
     get_permission_for_course_about,
     get_studio_url,
     sort_by_announcement,
-    sort_by_start_date
+    sort_by_start_date,
+    get_course_by_id
 )
 from courseware.masquerade import setup_masquerade
 from courseware.model_data import FieldDataCache
@@ -94,6 +96,7 @@ from openedx.features.course_experience.waffle import waffle as course_experienc
 from openedx.features.enterprise_support.api import data_sharing_consent_required
 from shoppingcart.utils import is_shopping_cart_enabled
 from student.models import CourseEnrollment, UserTestGroup
+from student.integration_rall import check_integration_rall, check_can_rall_enroll
 from util.cache import cache, cache_if_anonymous
 from util.db import outer_atomic
 from util.milestones_helpers import get_prerequisite_courses_display
@@ -769,6 +772,12 @@ def course_about(request, course_id):
         course_details = CourseDetails.populate(course)
         modes = CourseMode.modes_for_course_dict(course_key)
 
+        is_verified_course = CourseMode.VERIFIED in modes
+        rall_enabled = course.enable_integration_2035_univ if is_verified_course else False
+        rall_can_enroll = False
+        rall_error = None
+        link_for_payment = modes[CourseMode.VERIFIED].description if is_verified_course and modes[CourseMode.VERIFIED].description else None
+
         if configuration_helpers.get_value('ENABLE_MKTG_SITE', settings.FEATURES.get('ENABLE_MKTG_SITE', False)):
             return redirect(reverse(course_home_url_name(course.id), args=[text_type(course.id)]))
 
@@ -823,7 +832,7 @@ def course_about(request, course_id):
         registration_price, course_price = get_course_prices(course)
 
         # Determine which checkout workflow to use -- LMS shoppingcart or Otto basket
-        can_add_course_to_cart = _is_shopping_cart_enabled and registration_price and not ecommerce_checkout_link
+        can_add_course_to_cart = not rall_enabled and _is_shopping_cart_enabled and registration_price and not ecommerce_checkout_link
 
         # Overview
         overview = CourseOverview.get_from_id(course.id, request.user)
@@ -839,6 +848,9 @@ def course_about(request, course_id):
         # - Student cannot enroll in course
         active_reg_button = not (registered or is_course_full or not can_enroll)
 
+        if rall_enabled and is_verified_course and active_reg_button:
+            rall_can_enroll, rall_error = check_can_rall_enroll(request, course.id)
+
         is_shib_course = uses_shib(course)
 
         # get prerequisite courses display names
@@ -853,6 +865,7 @@ def course_about(request, course_id):
 
         # Embed the course reviews tool
         reviews_fragment_view = CourseReviewsModuleFragmentView().render_to_fragment(request, course=course)
+        display_link_for_payment = link_for_payment and ((not rall_enabled) or (rall_enabled and bool(rall_error)))
 
         context = {
             'course': course,
@@ -884,10 +897,32 @@ def course_about(request, course_id):
             'course_image_urls': overview.image_urls,
             'reviews_fragment_view': reviews_fragment_view,
             'sidebar_html_enabled': sidebar_html_enabled,
-            'overview': overview
+            'overview': overview,
+            'rall_enabled': rall_enabled,
+            'rall_can_enroll': rall_can_enroll,
+            'rall_error': rall_error,
+            'link_for_payment': link_for_payment,
+            'display_link_for_payment': display_link_for_payment
         }
 
         return render_to_response('courseware/course_about.html', context)
+
+
+def course_redirect_unti(request, course_id):
+    course_key = CourseKey.from_string(course_id)
+    course = get_course_by_id(course_key)
+    if course.enable_integration_2035_univ and (not request.user.is_authenticated or not request.user.profile.get_unti_id()):
+        lms_root = configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL)
+        sso_url = configuration_helpers.get_value('SSO_TP_URL', settings.SSO_TP_URL)
+        about_url = lms_root + reverse('about_course', kwargs={'course_id': course_key})
+        redirect_url = sso_url + '/login/unti/?' + urllib.urlencode({'next': about_url})
+        if request.user.is_authenticated:
+            logout(request)
+    elif not CourseEnrollment.is_enrolled(request.user, course.id):
+        redirect_url = reverse('about_course', kwargs={'course_id': course_key})
+    else:
+        redirect_url = reverse('openedx.course_experience.course_home', kwargs={'course_id': course_key})
+    return redirect(redirect_url)
 
 
 @ensure_csrf_cookie
@@ -921,6 +956,7 @@ def program_marketing(request, program_uuid):
 @cache_control(no_cache=True, no_store=True, must_revalidate=True)
 @ensure_valid_course_key
 @data_sharing_consent_required
+@check_integration_rall
 def progress(request, course_id, student_id=None):
     """ Display the progress page. """
     course_key = CourseKey.from_string(course_id)

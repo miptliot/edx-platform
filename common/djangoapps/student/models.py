@@ -485,6 +485,23 @@ class UserProfile(models.Model):
         if self.gender:
             return self.__enumerable_to_display(self.GENDER_CHOICES, self.gender)
 
+    def _get_goals_value(self, prop):
+        if self.goals:
+            goals = None
+            try:
+                goals = json.loads(self.goals)
+            except (ValueError, TypeError):
+                pass
+            if isinstance(goals, dict):
+                return goals.get(prop)
+        return None
+
+    def get_unti_id(self):
+        return self._get_goals_value('unti_id')
+
+    def get_leader_id(self):
+        return self._get_goals_value('leader_id')
+
     def get_meta(self):  # pylint: disable=missing-docstring
         js_str = self.meta
         if not js_str:

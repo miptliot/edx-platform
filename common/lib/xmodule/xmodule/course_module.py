@@ -926,6 +926,12 @@ class CourseFields(object):
         scope=Scope.settings,
         default=False
     )
+    enable_integration_2035_univ = Boolean(
+        display_name=_("Enable integration with 20.35 University"),
+        help=_("Enable integration with 20.35 University"),
+        scope=Scope.settings,
+        default=False
+    )
 
 
 class CourseModule(CourseFields, SequenceModule):  # pylint: disable=abstract-method
