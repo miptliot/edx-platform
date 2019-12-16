@@ -71,6 +71,7 @@ from openedx.core.djangoapps.user_api.preferences import api as preferences_api
 from openedx.core.djangoapps.user_api.config.waffle import PREVENT_AUTH_USER_WRITES, SYSTEM_MAINTENANCE_MSG, waffle
 from openedx.core.djangolib.markup import HTML, Text
 from student.cookies import set_logged_in_cookies
+from student.integration_rall import check_can_rall_enroll, rall_enroll
 from student.forms import AccountCreationForm, PasswordResetFormNoActive, get_registration_extension_form
 from student.helpers import (
     DISABLE_UNENROLL_CERT_STATES,
@@ -393,6 +394,7 @@ def change_enrollment(request, check_access=True):
             _update_email_opt_in(request, course_id.org)
 
         available_modes = CourseMode.modes_for_course_dict(course_id)
+        is_verified_course = CourseMode.VERIFIED in available_modes
 
         # Check whether the user is blocked from enrolling in this course
         # This can occur if the user's IP is on a global blacklist
@@ -407,6 +409,42 @@ def change_enrollment(request, check_access=True):
 
         if CourseEntitlement.check_for_existing_entitlement_and_enroll(user=user, course_run_key=course_id):
             return HttpResponse(reverse('courseware', args=[unicode(course_id)]))
+
+        try:
+            from lms.djangoapps.verify_student.models import ManualVerification
+        except ImportError:
+            ManualVerification = None
+
+        course_obj = modulestore().get_course(course_id)
+        if course_obj.enable_integration_2035_univ and is_verified_course:
+            can_enroll, msg = check_can_rall_enroll(request, str(course_id))
+            if can_enroll:
+                with transaction.atomic():
+                    CourseEnrollment.enroll(user, course_id, check_access=check_access, mode=CourseMode.VERIFIED)
+                    if ManualVerification:
+                        try:
+                            mv = ManualVerification.objects.get(user=user)
+                            if mv.status != 'approved':
+                                mv.status = 'approved'
+                                mv.reason = 'Approved by 20.35 University'
+                                mv.save()
+                        except ManualVerification.DoesNotExist:
+                            mv = ManualVerification(
+                                reason='Approved by 20.35 University',
+                                status='approved',
+                                name=user.profile.name,
+                                user=user
+                            )
+                            mv.save()
+
+                    rall_enroll_result = rall_enroll(request, str(course_id))
+                    if rall_enroll_result:
+                        return HttpResponse()
+                    else:
+                        transaction.set_rollback(True)
+                        return HttpResponseBadRequest(_("University 20.35 can't enroll student"))
+            else:
+                return HttpResponseBadRequest(msg)
 
         # Check that auto enrollment is allowed for this course
         # (= the course is NOT behind a paywall)

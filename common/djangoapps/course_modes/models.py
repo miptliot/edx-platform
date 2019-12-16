@@ -109,7 +109,7 @@ class CourseMode(models.Model):
 
     # optional description override
     # WARNING: will not be localized
-    description = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True, verbose_name=_("Description (can be used as External URL for payment)"))
 
     # Optional SKU for integration with the ecommerce service
     sku = models.CharField(

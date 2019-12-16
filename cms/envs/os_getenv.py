@@ -359,6 +359,10 @@ PLP_API_KEY = os.getenv('PLP_API_KEY', locals().get('PLP_API_KEY', '123456'))
 SSO_API_KEY = os.getenv('SSO_API_KEY', locals().get('SSO_API_KEY', '123456'))
 SSO_API_TOKEN = os.getenv('SSO_API_TOKEN', locals().get('SSO_API_TOKEN', '123456'))
 
+RALL_URL = os.getenv('RALL_URL', locals().get('RALL_URL', 'http://localhost'))
+RALL_PLATFORM_ID = os.getenv('RALL_PLATFORM_ID', locals().get('RALL_PLATFORM_ID', None))
+RALL_API_TOKEN = os.getenv('RALL_API_TOKEN', locals().get('RALL_API_TOKEN', None))
+
 REDIRECT_IS_HTTPS = str(os.getenv('REDIRECT_IS_HTTPS', True)) == 'True'
 
 XQUEUE_INTERFACE = {

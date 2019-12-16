@@ -311,6 +311,14 @@ urlpatterns += [
     ),
 
     url(
+        r'^course-redirect/{}$'.format(
+            settings.COURSE_ID_PATTERN,
+        ),
+        courseware_views.course_redirect_unti,
+        name='course_redirect_unti',
+    ),
+
+    url(
         r'^courses/{}/enroll_staff$'.format(
             settings.COURSE_ID_PATTERN,
         ),

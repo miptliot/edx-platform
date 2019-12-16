@@ -26245,3 +26245,56 @@ msgstr "Переместить в когорту:"
 
 msgid "Loading..."
 msgstr "Загрузка..."
+
+msgid "Regenerate Certificate"
+msgstr "Обновить сертификат"
+
+msgid "User already in the black list"
+msgstr "Пользователь уже в чёрном списке"
+
+msgid "Individual Exceptions"
+msgstr "Исключения"
+
+msgid "Enter the username or email address of each learner that you want to add to blacklist."
+msgstr ""
+"Введите имя пользователя или email учащегося, чтобы добавить его в чёрный список"
+" (пользователям из чёрного списка сертификат не генерируется)."
+
+msgid "Student email or username"
+msgstr "Имя пользователя или email учащегося"
+
+msgid "Username or email"
+msgstr "Имя пользователя или email"
+
+msgid "Add to Black List"
+msgstr "Добавить в чёрный список"
+
+msgid "Generated Certificates"
+msgstr "Выданные сертификаты"
+
+msgid "Enable integration with 20.35 University"
+msgstr "Включить интеграцию с Университетом 20.35"
+
+msgid "Description (can be used as External URL for payment)"
+msgstr "Описание (может быть использовано, чтобы задать URL для оплаты)"
+
+msgid "Pay for Course"
+msgstr "Оплатить обучение"
+
+msgid "Enroll through 20.35 University"
+msgstr "Записаться за счет Университета 20.35"
+
+msgid "Course available only for the 20.35 students"
+msgstr "Чтобы записаться за счёт Университета 20.35 вы должны быть авторизованы через него"
+
+msgid "Course available only for authorized users"
+msgstr "Курс доступен только для авторизованных ппользователей"
+
+msgid "You can't enroll through 20.35: Unknown server error"
+msgstr "Запись через Университет 20.35 недоступна: Неизвестная ошибка в процессе верификации пользователя"
+
+msgid "You can't enroll through 20.35:"
+msgstr "Запись через Университет 20.35 недоступна:"
+
+msgid "University 20.35 can't enroll student"
+msgstr "Университет 20.35 не может записать студента на курс"

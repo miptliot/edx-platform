@@ -28,6 +28,7 @@ from openedx.core.djangoapps.plugin_api.views import EdxFragmentView
 from openedx.core.djangoapps.util.maintenance_banner import add_maintenance_banner
 from openedx.features.course_experience.course_tools import CourseToolsPluginManager
 from student.models import CourseEnrollment
+from student.integration_rall import check_integration_rall
 from course_shifts.models import allow_to_change_deadline
 from util.views import ensure_valid_course_key
 
@@ -52,6 +53,7 @@ class CourseHomeView(CourseTabView):
     @method_decorator(cache_control(no_cache=True, no_store=True, must_revalidate=True))
     @method_decorator(ensure_valid_course_key)
     @method_decorator(add_maintenance_banner)
+    @method_decorator(check_integration_rall)
     def get(self, request, course_id, **kwargs):
         """
         Displays the home page for the specified course.
