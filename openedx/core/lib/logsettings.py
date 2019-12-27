@@ -21,44 +21,6 @@ class ExtendedSysLogHandler(logging.handlers.SysLogHandler):
         if self.socktimeout > 0:
             self.socket.settimeout(self.socktimeout)
 
-    def emit(self, record):
-        """
-        Emit a record.
-
-        The record is formatted, and then sent to the syslog server. If
-        exception information is present, it is NOT sent to the server.
-        """
-        try:
-            msg = self.format(record) + '\000'
-            """
-            We need to convert record level to lowercase, maybe this will
-            change in the future.
-            """
-            prio = '<%d>' % self.encodePriority(self.facility,
-                                                self.mapPriority(record.levelname))
-            # Message is a string. Convert to bytes as required by RFC 5424
-            if type(msg) is unicode:
-                msg = msg.encode('utf-8')
-            msg = prio + msg
-            try:
-                if self.unixsocket:
-                    try:
-                        self.socket.send(msg)
-                    except socket.error:
-                        self.socket.close() # See issue 17981
-                        self._connect_unixsocket(self.address)
-                        self.socket.send(msg)
-                elif self.socktype == socket.SOCK_DGRAM:
-                    self.socket.sendto(msg, self.address)
-                else:
-                    self.socket.sendall(msg)
-            except socket.error, exc:
-                sys.stderr.write("Socket error during send log message: %s" % exc)
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except:
-            self.handleError(record)
-
 
 def get_logger_config(log_dir,
                       logging_env="no_env",
