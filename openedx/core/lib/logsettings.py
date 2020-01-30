@@ -16,10 +16,53 @@ class ExtendedSysLogHandler(logging.handlers.SysLogHandler):
                  facility=logging.handlers.SysLogHandler.LOG_USER,
                  socktype=None,
                  socktimeout=0):
+        self._is_retry = False
         self.socktimeout = socktimeout
         super(ExtendedSysLogHandler, self).__init__(address=address, facility=facility, socktype=socktype)
         if self.socktimeout > 0:
             self.socket.settimeout(self.socktimeout)
+
+    def _reconnect(self):
+        """Make a new socket that is the same as the old one"""
+
+        # close the existing socket before getting a new one to the same host/port
+        if self.socket:
+            self.socket.close()
+
+        if self.unixsocket:
+            self._connect_unixsocket(self.address)
+        else:
+            self.socket = socket.socket(socket.AF_INET, self.socktype)
+            if self.socktype == socket.SOCK_STREAM:
+                self.socket.connect(self.address)
+
+    def handleError(self, record):
+        # use the default error handling (writes an error message to stderr)
+        super(ExtendedSysLogHandler, self).handleError(record)
+
+        # If we get an error within a retry, just return.  We don't want an
+        # infinite, recursive loop telling us something is broken.
+        # This leaves the socket broken.
+        if self._is_retry:
+            return
+
+        # Set the retry flag and begin deciding if this is a closed socket, and
+        # trying to reconnect.
+        self._is_retry = True
+        try:
+            __, exception, __ = sys.exc_info()
+            # If the error is a broken pipe exception (32), get a new socket.
+            if isinstance(exception, socket.error) and exception.errno == 32:
+                try:
+                    self._reconnect()
+                except:
+                    # If reconnecting fails, give up.
+                    pass
+                else:
+                    # Make an effort to rescue the recod.
+                    self.emit(record)
+        finally:
+            self._is_retry = False
 
 
 def get_logger_config(log_dir,
