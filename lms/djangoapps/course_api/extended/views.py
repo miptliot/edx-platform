@@ -26,11 +26,15 @@ from student.models import AnonymousUserId
 
 @check_course_exists(check_staff_permission=True)
 def course_completion(request, course):
-    user, response = _get_user(request)
-    if not user:
-        return response
+    all_users = request.GET.get('all_users') == '1'
+    user = None
 
-    blocks = get_course_outline_block_tree(request, str(course.id), user)
+    if not all_users:
+        user, response = _get_user(request)
+        if not user:
+            return response
+
+    blocks = get_course_outline_block_tree(request, str(course.id), user, all_users)
     return JsonResponse({
         "success": True,
         "error": None,
