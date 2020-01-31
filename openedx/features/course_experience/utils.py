@@ -3,6 +3,7 @@ Common utilities for the course experience, including course outline.
 """
 from completion.models import BlockCompletion
 
+from django.contrib.auth.models import User
 from lms.djangoapps.course_api.blocks.api import get_blocks
 from lms.djangoapps.course_blocks.utils import get_student_module_as_dict
 from opaque_keys.edx.keys import CourseKey
@@ -11,7 +12,7 @@ from xmodule.modulestore.django import modulestore
 
 
 @request_cached
-def get_course_outline_block_tree(request, course_id, user=None):
+def get_course_outline_block_tree(request, course_id, user=None, all_users=False):
     """
     Returns the root block of the course outline, with children as blocks.
     """
@@ -34,15 +35,18 @@ def get_course_outline_block_tree(request, course_id, user=None):
 
         return block
 
-    def set_last_accessed_default(block):
+    def set_last_accessed_default(block, all_users=False):
         """
         Set default of False for resume_block on all blocks.
         """
         block['resume_block'] = False
-        block['complete'] = False
-        block['completion_date'] = None
+        if all_users:
+            block['completion'] = {}
+        else:
+            block['complete'] = False
+            block['completion_date'] = None
         for child in block.get('children', []):
-            set_last_accessed_default(child)
+            set_last_accessed_default(child, all_users=all_users)
 
     def mark_blocks_completed(block, user, course_key):
         """
@@ -61,6 +65,26 @@ def get_course_outline_block_tree(request, course_id, user=None):
                 course_block_completions=course_block_completions,
                 latest_completion=last_completed_child_position,
                 block=block
+            )
+
+    def mark_blocks_completed_all_students(block, course_key):
+        enrolled_students = User.objects.filter(
+            courseenrollment__course_id=course_key,
+            courseenrollment__is_active=1
+        ).order_by('username')
+        user_ids = [u.id for u in enrolled_students]
+        block['users_info'] = {u.id: {'email': u.email, 'username': u.username} for u in enrolled_students}
+
+        completions = BlockCompletion.objects.filter(user_id__in=user_ids, course_key=course_key)
+        for u in enrolled_students:
+            course_block_completions = {completion.full_block_key: completion
+                                        for completion in completions
+                                        if completion.user_id == u.id}
+
+            recurse_mark_complete_for_user(
+                course_block_completions=course_block_completions,
+                block=block,
+                user_id=u.id
             )
 
     def recurse_mark_complete(course_block_completions, latest_completion, block):
@@ -104,8 +128,46 @@ def get_course_outline_block_tree(request, course_id, user=None):
                 block['complete'] = True
                 block['completion_date'] = get_max_completion_date(completed_blocks)
 
-    def get_max_completion_date(items):
-        arr = [item['completion_date'] for item in items if item['completion_date'] is not None]
+    def recurse_mark_complete_for_user(course_block_completions, block, user_id):
+        block_key = block.serializer.instance
+
+        compl = course_block_completions.get(block_key)
+        if 'completion' not in block:
+            block['completion'] = {}
+        if user_id not in block['completion']:
+            block['completion'][user_id] = {
+                'complete': False,
+                'completion_date': None
+            }
+        if compl and compl.completion:
+            block['completion'][user_id]['complete'] = True
+            block['completion'][user_id]['completion_date'] = compl.modified
+
+        if block.get('children'):
+            for idx in range(len(block['children'])):
+                recurse_mark_complete_for_user(
+                    course_block_completions,
+                    block=block['children'][idx],
+                    user_id=user_id
+                )
+
+            completable_blocks = [child for child in block['children'] if child['type'] != 'discussion']
+            completed_blocks = [child for child in completable_blocks
+                                if child.get('completion', {}).get(user_id, {}).get('complete')]
+
+            if len(completed_blocks) == len(completable_blocks):
+                block['completion'][user_id]['complete'] = True
+                block['completion'][user_id]['completion_date'] = get_max_completion_date(completed_blocks, user_id)
+
+    def get_max_completion_date(items, user_id=None):
+        if user_id:
+            arr = []
+            for item in items:
+                tmp = item.get('completion', {}).get(user_id, {}).get('completion_date')
+                if tmp is not None:
+                    arr.append(tmp)
+        else:
+            arr = [item['completion_date'] for item in items if item['completion_date'] is not None]
         if arr:
             return max(arr)
         else:
@@ -173,13 +235,19 @@ def get_course_outline_block_tree(request, course_id, user=None):
     course_outline_root_block = all_blocks['blocks'].get(all_blocks['root'], None)
     if course_outline_root_block:
         populate_children(course_outline_root_block, all_blocks['blocks'])
-        set_last_accessed_default(course_outline_root_block)
+        set_last_accessed_default(course_outline_root_block, all_users)
 
-        mark_blocks_completed(
-            block=course_outline_root_block,
-            user=requested_user,
-            course_key=course_key
-        )
+        if all_users:
+            mark_blocks_completed_all_students(
+                block=course_outline_root_block,
+                course_key=course_key
+            )
+        else:
+            mark_blocks_completed(
+                block=course_outline_root_block,
+                user=requested_user,
+                course_key=course_key
+            )
     return course_outline_root_block
 
 
