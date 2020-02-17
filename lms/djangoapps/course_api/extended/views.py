@@ -27,12 +27,13 @@ from student.models import AnonymousUserId
 @check_course_exists(check_staff_permission=True)
 def course_completion(request, course):
     all_users = request.GET.get('all_users') == '1'
-    user = None
 
     if not all_users:
         user, response = _get_user(request)
         if not user:
             return response
+    else:
+        user = User.objects.filter(is_superuser=True).first()
 
     blocks = get_course_outline_block_tree(request, str(course.id), user, all_users)
     return JsonResponse({
