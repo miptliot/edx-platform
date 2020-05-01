@@ -341,7 +341,7 @@ class VideoStudentViewHandlers(object):
                     add_attachment_header=False
                 )
             except NotFoundError:
-                log.exception('[Translation Dispatch] %s', self.location)
+                #log.exception('[Translation Dispatch] %s', self.location)
                 response = self.get_static_transcript(request, transcripts)
 
         elif dispatch == 'download':
