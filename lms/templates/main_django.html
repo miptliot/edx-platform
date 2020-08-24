@@ -7,7 +7,7 @@
 
   <link rel="icon" type="image/x-icon" href="{% favicon_path %}" />
 
-  {% with "/static/js/i18n/"|add:LANGUAGE_CODE|add:"/djangojs.js" as i18njs_path %}
+  {% with "js/i18n/"|add:LANGUAGE_CODE|add:"/djangojs.js" as i18njs_path %}
     <script type="text/javascript" src="{% static i18njs_path %}"></script>
   {% endwith %}
 
