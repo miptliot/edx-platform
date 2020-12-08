@@ -208,7 +208,9 @@ function($, Backbone, _, Utils, MetadataView, MetadataCollection) {
 
         handleUpdateEdxVideoId: function(edxVideoId) {
             var edxVideoIdField = Utils.getField(this.collection, 'edx_video_id');
-            edxVideoIdField.setValue(edxVideoId);
+            if (edxVideoIdField) {
+                edxVideoIdField.setValue(edxVideoId);
+            }
         },
 
         getLocator: function() {
@@ -222,10 +224,18 @@ function($, Backbone, _, Utils, MetadataView, MetadataCollection) {
             var views = this.settingsView.views,
                 videoURLSView = views.video_url,
                 edxVideoIdView = views.edx_video_id,
-                edxVideoIdData = edxVideoIdView.getData(),
+                edxVideoIdData = null,
+                data = null,
                 videoURLsData = videoURLSView.getVideoObjectsList(),
-                data = videoURLsData.concat(edxVideoIdData),
-                locator = this.getLocator();
+                locator = this.getLocator(),
+                videoUrl = Utils.getField(this.collection, 'video_url').getDisplayValue();
+
+            if (edxVideoIdView) {
+                edxVideoIdData = edxVideoIdView.getData();
+                data = videoURLsData.concat(edxVideoIdData);
+            } else if (videoUrl.length === 0) {
+                return;
+            }
 
             Utils.command('check', locator, data)
                 .done(function(response) {

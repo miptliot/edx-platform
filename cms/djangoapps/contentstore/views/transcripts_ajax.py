@@ -21,6 +21,7 @@ from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import UsageKey
 from six import text_type
 from edxval.api import create_or_update_video_transcript, create_external_video
+from edxval.models import Video
 from student.auth import has_course_author_access
 from util.json_request import JsonResponse
 from xmodule.contentstore.content import StaticContent
@@ -214,6 +215,17 @@ def upload_transcripts(request):
             edx_video_id = create_external_video(display_name=u'external video')
             video.edx_video_id = edx_video_id
             video.save_with_metadata(request.user)
+        else:
+            try:
+                Video.objects.get(edx_video_id=edx_video_id)
+            except Video.DoesNotExist:
+                video = Video(
+                    client_video_id=u'external video',
+                    edx_video_id=edx_video_id,
+                    duration=0,
+                    status='external'
+                )
+                video.save()
 
         response = JsonResponse({'edx_video_id': edx_video_id, 'status': 'Success'}, status=200)
 
@@ -470,7 +482,14 @@ def _validate_transcripts_data(request):
 
     # parse data form request.GET.['data']['video'] to useful format
     videos = {'youtube': '', 'html5': {}}
-    for video_data in data.get('videos'):
+    data_videos = data.get('videos')
+    if data_videos is None:
+        data_videos = [{
+            'mode': "edx_video_id",
+            'type': "edx_video_id",
+            'video': item.edx_video_id
+        }]
+    for video_data in data_videos:
         if video_data['type'] == 'youtube':
             videos['youtube'] = video_data['video']
         elif video_data['type'] == 'edx_video_id':
